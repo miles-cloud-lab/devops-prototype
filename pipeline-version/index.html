@@ -1,0 +1,753 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DevOps 流水线 Tag 启动原型</title>
+  <style>
+    :root {
+      --primary: #1890ff;
+      --top: #001529;
+      --side: #001f33;
+      --side-deep: #001529;
+      --bg: #f2f6f9;
+      --border: #d9d9d9;
+      --text: #1f1f1f;
+      --muted: #8c8c8c;
+      --line: #dfe7ef;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei UI", "Microsoft YaHei", Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+      font-size: 14px;
+    }
+
+    .app {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--bg);
+      position: relative;
+    }
+
+    .topbar {
+      height: 48px;
+      background: var(--top);
+      color: rgba(255, 255, 255, 0.88);
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      gap: 22px;
+      white-space: nowrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #fff;
+      margin-right: 4px;
+    }
+
+    .brand-mark {
+      width: 25px;
+      height: 18px;
+      border: 3px solid #1687e8;
+      border-top-color: #27b4ff;
+      border-radius: 18px 18px 8px 8px;
+      position: relative;
+    }
+
+    .brand-mark:before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: -10px;
+      width: 12px;
+      height: 12px;
+      border: 3px solid #1687e8;
+      border-bottom: 0;
+      border-radius: 16px 16px 0 0;
+    }
+
+    .top-item { display: flex; align-items: center; gap: 6px; opacity: 0.9; }
+    .top-search {
+      margin-left: auto;
+      width: 270px;
+      color: rgba(255,255,255,.7);
+    }
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .main {
+      display: flex;
+      height: 1032px;
+    }
+
+    .sidebar {
+      width: 200px;
+      background: #001f33;
+      color: rgba(255,255,255,.82);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .side-title {
+      height: 49px;
+      line-height: 49px;
+      padding-left: 24px;
+      color: #fff;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 16px;
+    }
+
+    .menu-item {
+      height: 45px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      gap: 10px;
+      color: rgba(255,255,255,.72);
+    }
+
+    .menu-group {
+      height: 45px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px 0 24px;
+      background: #001a2b;
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .menu-item.active {
+      background: var(--primary);
+      color: #fff;
+      padding-left: 48px;
+    }
+
+    .side-collapse {
+      margin-top: auto;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: 22px;
+    }
+
+    .workspace {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      background: #edf3f8;
+    }
+
+    .page-header {
+      height: 64px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 16px 0 32px;
+      gap: 28px;
+      border-bottom: 1px solid #eef0f2;
+    }
+
+    .back { color: var(--primary); display: flex; align-items: center; gap: 8px; }
+    .pipeline-name { font-weight: 600; margin-right: 24px; }
+    .tabs { display: flex; align-self: stretch; gap: 32px; }
+    .tab {
+      display: flex;
+      align-items: center;
+      height: 64px;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    .actions {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      height: 32px;
+      padding: 0 16px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: default;
+    }
+
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .hidden { display: none; }
+
+    .canvas {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 64px;
+      bottom: 0;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg,
+          transparent 0, transparent 280px, rgba(118,146,170,.25) 280px, rgba(118,146,170,.25) 281px,
+          transparent 281px, transparent 561px, rgba(118,146,170,.25) 561px, rgba(118,146,170,.25) 562px,
+          transparent 562px, transparent 842px, rgba(118,146,170,.25) 842px, rgba(118,146,170,.25) 843px,
+          transparent 843px, transparent 1123px, rgba(118,146,170,.25) 1123px, rgba(118,146,170,.25) 1124px,
+          transparent 1124px, transparent 1404px, rgba(118,146,170,.25) 1404px, rgba(118,146,170,.25) 1405px,
+          transparent 1405px, transparent 1685px, rgba(118,146,170,.25) 1685px, rgba(118,146,170,.25) 1686px,
+          transparent 1686px),
+        #edf3f8;
+    }
+
+    .stage-label {
+      position: absolute;
+      top: 20px;
+      font-size: 14px;
+      color: #222;
+    }
+    .stage-label .edit { color: var(--primary); margin-left: 6px; }
+    .s1 { left: 48px; }
+    .s2 { left: 329px; }
+    .s3 { left: 640px; }
+    .s4 { left: 960px; }
+    .s5 { left: 1248px; }
+    .s6 { left: 1560px; }
+
+    .pipeline-line {
+      position: absolute;
+      left: 22px;
+      width: 1685px;
+      top: 118px;
+      height: 1px;
+      background: #cfdbe6;
+    }
+
+    .node {
+      position: absolute;
+      top: 98px;
+      width: 135px;
+      height: 40px;
+      background: #fff;
+      border: 1px solid #e5e8ec;
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .n1 { left: 98px; }
+    .n2 { left: 410px; }
+    .n3 { left: 684px; }
+    .n4 { left: 974px; }
+    .n5 { left: 1256px; }
+    .n6 { left: 1544px; }
+    .gitlab { color: #f05a28; font-size: 18px; }
+
+    .dot {
+      position: absolute;
+      top: 109px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 5px solid #fff;
+      background: #000;
+      box-shadow: 0 1px 4px rgba(0,0,0,.12);
+    }
+    .d1 { left: 70px; }
+    .d2 { left: 350px; }
+    .d3 { left: 631px; }
+    .d4 { left: 912px; }
+    .d5 { left: 1193px; }
+    .d6 { left: 1474px; }
+
+    .plus {
+      position: absolute;
+      top: 111px;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      border-radius: 50%;
+      background: #777;
+      color: #fff;
+      text-align: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .p1 { left: 16px; }
+    .p2 { left: 296px; }
+    .p3 { left: 577px; }
+    .p4 { left: 858px; }
+    .p5 { left: 1139px; }
+    .p6 { left: 1420px; }
+
+    .horizontal-scroll {
+      position: absolute;
+      left: 18px;
+      right: 132px;
+      bottom: 8px;
+      height: 8px;
+      background: #8a8a8a;
+    }
+
+    .mask {
+      position: absolute;
+      left: 200px;
+      right: 0;
+      top: 48px;
+      bottom: 0;
+      background: rgba(0,0,0,.48);
+      z-index: 5;
+    }
+
+    .modal {
+      position: absolute;
+      z-index: 6;
+      width: 720px;
+      left: 50%;
+      top: 100px;
+      transform: translateX(-50%);
+      background: #fff;
+      box-shadow: 0 10px 34px rgba(0,0,0,.25);
+    }
+
+    .modal-head {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      border-bottom: 1px solid #eef0f2;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .close { font-size: 24px; color: #8c8c8c; font-weight: 300; }
+    .modal-body { padding: 20px 20px 0; }
+
+    .source-box {
+      border: 1px solid #e5e5e5;
+      background: #fff;
+    }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      border-bottom: 1px solid #e5e5e5;
+      min-height: 52px;
+    }
+
+    .source-grid:last-child { border-bottom: 0; }
+    .cell {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+    }
+    .cell.label { color: #333; }
+    .repo {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #333;
+    }
+
+    .select {
+      height: 32px;
+      border: 1px solid var(--border);
+      background: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+      color: #333;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .select.open {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(24,144,255,.08);
+    }
+
+    .type-select {
+      width: 120px;
+      color: #333;
+      margin-right: 8px;
+    }
+
+    .value-select {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .select .arrow {
+      width: 7px;
+      height: 7px;
+      border-right: 1px solid #8c8c8c;
+      border-bottom: 1px solid #8c8c8c;
+      transform: rotate(45deg);
+      margin: -4px 2px 0 8px;
+      flex: 0 0 auto;
+    }
+
+    .select.open .arrow {
+      transform: rotate(225deg);
+      margin-top: 4px;
+    }
+
+    .dropdown-menu {
+      display: none;
+      position: absolute;
+      left: -1px;
+      top: 31px;
+      width: calc(100% + 2px);
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      box-shadow: 0 4px 12px rgba(0,0,0,.15);
+      padding: 8px;
+      z-index: 8;
+    }
+
+    .select.open .dropdown-menu { display: block; }
+    .dropdown-item {
+      height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      color: #333;
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover { background: #e6f7ff; }
+    .dropdown-item.active {
+      background: #bae7ff;
+      color: #096dd9;
+    }
+    .dropdown-item .check { width: 18px; color: #1890ff; }
+
+    .value-dropdown {
+      left: -1px;
+      width: calc(100% + 2px);
+      max-height: 168px;
+      overflow: hidden;
+    }
+
+    .branch-text {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .branch-meta {
+      color: #8c8c8c;
+      margin-left: auto;
+      font-size: 12px;
+    }
+
+    .form-item { margin-top: 16px; }
+    .form-label { margin-bottom: 8px; color: #333; }
+    textarea {
+      width: 100%;
+      height: 98px;
+      border: 1px solid var(--border);
+      resize: vertical;
+      min-height: 98px;
+      max-height: 220px;
+      padding: 8px 12px;
+      font: inherit;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(24,144,255,.08);
+    }
+    textarea::placeholder { color: #bfbfbf; }
+
+    .modal-foot {
+      height: 58px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 8px;
+      padding: 0 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topbar">
+      <div class="brand"><span class="brand-mark"></span>Panther</div>
+      <div class="top-item">⌂ 控制台</div>
+      <div class="top-item">◆ 全部产品</div>
+      <div class="top-item">S Flux DevOps</div>
+      <div class="top-item">▣ Redis</div>
+      <div class="top-item">▣ 负载均衡 SCLB</div>
+      <div class="top-item">♧ CMDB</div>
+      <div class="top-item">☁ CVM</div>
+      <div class="top-search">⌕ 支持输入关键词搜索产品和文档</div>
+      <div class="top-item">业务账号</div>
+      <div class="top-item">业务账单</div>
+      <div class="top-item">咨询</div>
+      <div class="top-item">工单</div>
+      <div class="top-item">通知</div>
+      <div class="avatar">王</div>
+      <div>王铭浩</div>
+    </div>
+
+    <div class="main">
+      <aside class="sidebar">
+        <div class="side-title">Flux DevOps</div>
+        <div class="menu-item">▦ 概览</div>
+        <div class="menu-item">▣ 应用</div>
+        <div class="menu-group"><span>☍ 流水线</span><span>⌃</span></div>
+        <div class="menu-item active">流水线列表</div>
+        <div class="menu-item">自定义插件</div>
+        <div class="menu-item">◎ 环境管理</div>
+        <div class="menu-item">⌂ 代码管理</div>
+        <div class="menu-item">◼ 制品仓库</div>
+        <div class="menu-item">▧ 代码评审</div>
+        <div class="menu-item">▤ 操作审计</div>
+        <div class="side-collapse">‹</div>
+      </aside>
+
+      <section class="workspace">
+        <div class="page-header">
+          <div class="back">‹ 返回</div>
+          <div class="pipeline-name">test03-wmh</div>
+          <div class="tabs">
+            <div class="tab">基本信息</div>
+            <div class="tab active">流程详情</div>
+            <div class="tab">流程配置</div>
+            <div class="tab">触发规则</div>
+            <div class="tab">报警通知</div>
+          </div>
+          <div class="actions">
+            <button class="btn">仅保存</button>
+            <button class="btn primary" id="openRunModal">保存并运行</button>
+          </div>
+        </div>
+
+        <div class="canvas">
+          <div class="stage-label s1">代码检出<span class="edit">✎</span></div>
+          <div class="stage-label s2">代码评审<span class="edit">✎</span></div>
+          <div class="stage-label s3">代码扫描<span class="edit">✎</span></div>
+          <div class="stage-label s4">对象存储<span class="edit">✎</span></div>
+          <div class="stage-label s5">代码合并<span class="edit">✎</span></div>
+          <div class="stage-label s6">新阶段</div>
+          <div class="pipeline-line"></div>
+          <div class="plus p1">+</div>
+          <div class="plus p2">+</div>
+          <div class="plus p3">+</div>
+          <div class="plus p4">+</div>
+          <div class="plus p5">+</div>
+          <div class="plus p6">+</div>
+          <div class="dot d1"></div>
+          <div class="dot d2"></div>
+          <div class="dot d3"></div>
+          <div class="dot d4"></div>
+          <div class="dot d5"></div>
+          <div class="dot d6"></div>
+          <div class="node n1"><span class="gitlab">◆</span><span>官方仓库</span></div>
+          <div class="node n2">代码评审</div>
+          <div class="node n3">SonarQube 扫描</div>
+          <div class="node n4">上传对象存储</div>
+          <div class="node n5">源资源</div>
+          <div class="node n6">合并代码到master</div>
+          <div class="horizontal-scroll"></div>
+        </div>
+      </section>
+    </div>
+
+    <div class="mask hidden" id="modalMask"></div>
+
+    <div class="modal hidden" id="runModal">
+      <div class="modal-head">
+        <span>运行配置</span>
+        <span class="close" id="closeRunModal">×</span>
+      </div>
+      <div class="modal-body">
+        <div class="source-box">
+          <div class="source-grid">
+            <div class="cell label">代码源</div>
+            <div class="cell label">分支/标签</div>
+          </div>
+          <div class="source-grid">
+            <div class="cell repo">...ng220757/my-first-project.git</div>
+            <div class="cell">
+              <div class="select type-select" id="refTypeSelect">
+                <span id="refTypeText">分支</span>
+                <span class="arrow"></span>
+                <div class="dropdown-menu">
+                  <div class="dropdown-item active" data-ref-type="branch"><span class="check">✓</span><span>分支</span></div>
+                  <div class="dropdown-item" data-ref-type="tag"><span class="check"></span><span>标签</span></div>
+                </div>
+              </div>
+              <div class="select value-select" id="refValueSelect">
+                <span id="refValueText">master</span>
+                <span class="arrow"></span>
+                <div class="dropdown-menu value-dropdown" id="refValueMenu"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-item">
+          <div class="form-label">运行备注</div>
+          <textarea placeholder="输入运行备注"></textarea>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn" id="cancelRun">取消</button>
+        <button class="btn primary" id="confirmRun">运行</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const state = {
+      type: "branch",
+      branch: "master",
+      tag: "v1.8.2"
+    };
+
+    const options = {
+      branch: [
+        { value: "master", meta: "" },
+        { value: "release/video-1.8", meta: "" },
+        { value: "feature/player", meta: "" }
+      ],
+      tag: [
+        { value: "v1.8.2", meta: "" },
+        { value: "v1.8.1", meta: "" },
+        { value: "v1.7.9-hotfix", meta: "" }
+      ]
+    };
+
+    const refTypeSelect = document.getElementById("refTypeSelect");
+    const refValueSelect = document.getElementById("refValueSelect");
+    const refTypeText = document.getElementById("refTypeText");
+    const refValueText = document.getElementById("refValueText");
+    const refValueMenu = document.getElementById("refValueMenu");
+    const openRunModal = document.getElementById("openRunModal");
+    const runModal = document.getElementById("runModal");
+    const modalMask = document.getElementById("modalMask");
+    const closeRunModal = document.getElementById("closeRunModal");
+    const cancelRun = document.getElementById("cancelRun");
+    const confirmRun = document.getElementById("confirmRun");
+
+    function showRunModal() {
+      runModal.classList.remove("hidden");
+      modalMask.classList.remove("hidden");
+    }
+
+    function hideRunModal() {
+      closeSelects();
+      runModal.classList.add("hidden");
+      modalMask.classList.add("hidden");
+    }
+
+    function closeSelects(except) {
+      [refTypeSelect, refValueSelect].forEach((select) => {
+        if (select !== except) select.classList.remove("open");
+      });
+    }
+
+    function renderType() {
+      refTypeText.textContent = state.type === "branch" ? "分支" : "标签";
+      refTypeSelect.querySelectorAll("[data-ref-type]").forEach((item) => {
+        const active = item.dataset.refType === state.type;
+        item.classList.toggle("active", active);
+        item.querySelector(".check").textContent = active ? "✓" : "";
+      });
+    }
+
+    function renderValues() {
+      const currentValue = state.type === "branch" ? state.branch : state.tag;
+      refValueText.textContent = currentValue;
+      refValueMenu.innerHTML = options[state.type].map((item) => {
+        const active = item.value === currentValue;
+        return `
+          <div class="dropdown-item ${active ? "active" : ""}" data-ref-value="${item.value}">
+            <span class="check">${active ? "✓" : ""}</span>
+            <span class="branch-text">${item.value}</span>
+            ${item.meta ? `<span class="branch-meta">${item.meta}</span>` : ""}
+          </div>
+        `;
+      }).join("");
+    }
+
+    refTypeSelect.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closeSelects(refTypeSelect);
+      refTypeSelect.classList.toggle("open");
+    });
+
+    refTypeSelect.querySelectorAll("[data-ref-type]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.stopPropagation();
+        state.type = item.dataset.refType;
+        renderType();
+        renderValues();
+        refTypeSelect.classList.remove("open");
+      });
+    });
+
+    refValueSelect.addEventListener("click", (event) => {
+      event.stopPropagation();
+      closeSelects(refValueSelect);
+      refValueSelect.classList.toggle("open");
+    });
+
+    refValueMenu.addEventListener("click", (event) => {
+      const item = event.target.closest("[data-ref-value]");
+      if (!item) return;
+      event.stopPropagation();
+      if (state.type === "branch") {
+        state.branch = item.dataset.refValue;
+      } else {
+        state.tag = item.dataset.refValue;
+      }
+      renderValues();
+      refValueSelect.classList.remove("open");
+    });
+
+    document.addEventListener("click", () => closeSelects());
+    openRunModal.addEventListener("click", showRunModal);
+    closeRunModal.addEventListener("click", hideRunModal);
+    cancelRun.addEventListener("click", hideRunModal);
+    confirmRun.addEventListener("click", hideRunModal);
+    modalMask.addEventListener("click", hideRunModal);
+    renderType();
+    renderValues();
+    if (new URLSearchParams(window.location.search).get("modal") === "1") {
+      showRunModal();
+    }
+  </script>
+</body>
+</html>
