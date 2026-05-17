@@ -1,0 +1,119 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DevOps Prototype</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --text: #1f2937;
+      --muted: #687385;
+      --line: #d8dee8;
+      --blue: #2468f2;
+      --blue-soft: #eef4ff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .shell {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 56px 24px;
+    }
+    header {
+      margin-bottom: 28px;
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .card {
+      display: block;
+      min-height: 180px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 8px 24px rgba(31, 41, 55, 0.06);
+    }
+    .card:hover {
+      border-color: #9db8ff;
+      box-shadow: 0 12px 28px rgba(31, 41, 55, 0.09);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+    h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+    }
+    .path {
+      margin-top: 18px;
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <h1>DevOps Prototype</h1>
+      <p class="subtitle">DevOps console prototype and interaction design.</p>
+    </header>
+    <section class="grid" aria-label="Prototype modules">
+      <a class="card" href="./pipeline-version/">
+        <span class="tag">Pipeline</span>
+        <h2>流水线版本构建增强</h2>
+        <p>运行配置弹窗支持分支/标签类型切换，并选择对应分支名或标签名。</p>
+        <div class="path">打开原型</div>
+      </a>
+      <a class="card" href="./image-tag-config/">
+        <span class="tag">Image Build</span>
+        <h2>镜像构建任务 Tag 配置</h2>
+        <p>在镜像构建任务编辑抽屉中配置任务级镜像 Tag，支持固定值和变量表达式。</p>
+        <div class="path">打开原型</div>
+      </a>
+    </section>
+  </main>
+</body>
+</html>
