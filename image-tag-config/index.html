@@ -479,11 +479,6 @@
       color: #111827;
       font-size: 13px;
     }
-    .combo-option-desc {
-      color: #8a949f;
-      font-size: 12px;
-      margin-top: 2px;
-    }
     .textarea {
       height: 112px;
       resize: none;
@@ -669,21 +664,18 @@
               <div class="field"><div class="label"><span class="required">*</span>DomeOS 项目 <span class="help">?</span></div><div class="select placeholder">请选择项目</div></div>
               <div class="field"><div class="label"><span class="required">*</span>DomeOS 工程 <span class="help">?</span></div><div class="select placeholder">请选择工程</div></div>
               <div class="field">
-                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:${CI_COMMIT_ID}。
-支持固定值或流水线变量。
-常用变量：
-${CI_COMMIT_ID}：8位 Commit ID
-${CI_COMMIT_SHA}：完整 Commit ID
-${CI_COMMIT_REF_NAME}：分支或 Tag 名
-${BUILD_NUMBER}：流水线运行编号
+                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:CI_COMMIT_ID。
+支持固定值或流程配置中维护的流水线变量。
 
-不填写时使用流程配置中的默认镜像后缀。">?</span></div>
+不填写时使用默认镜像后缀。">?</span></div>
                 <div class="combo">
-                  <input class="input combo-input" placeholder="选择流程变量或输入新的镜像 Tag" aria-label="镜像 Tag">
+                  <input class="input combo-input" placeholder="请选择镜像 Tag" aria-label="镜像 Tag">
                   <div class="combo-menu">
-                    <div class="combo-option" data-value="${IMAGE_TAG}"><div class="combo-option-title">${IMAGE_TAG}</div><div class="combo-option-desc">流程配置维护的默认镜像后缀</div></div>
-                    <div class="combo-option" data-value="${CI_COMMIT_ID}"><div class="combo-option-title">${CI_COMMIT_ID}</div><div class="combo-option-desc">8位 Commit ID</div></div>
-                    <div class="combo-option" data-value="${BUILD_NUMBER}"><div class="combo-option-title">${BUILD_NUMBER}</div><div class="combo-option-desc">流水线运行编号</div></div>
+                    <div class="combo-option" data-value="IMAGE_TAG"><div class="combo-option-title">IMAGE_TAG</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_ID"><div class="combo-option-title">CI_COMMIT_ID</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_SHA"><div class="combo-option-title">CI_COMMIT_SHA</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_REF_NAME"><div class="combo-option-title">CI_COMMIT_REF_NAME</div></div>
+                    <div class="combo-option" data-value="BUILD_NUMBER"><div class="combo-option-title">BUILD_NUMBER</div></div>
                   </div>
                 </div>
               </div>
@@ -705,21 +697,18 @@ ${BUILD_NUMBER}：流水线运行编号
               <div class="field"><div class="label"><span class="required">*</span>DomeOS 工程 <span class="help">?</span></div><div class="select placeholder">请选择工程</div></div>
               <div class="field"><div class="label"><span class="required">*</span>镜像</div><div class="select-grid"><div class="select placeholder">请选择</div><div class="select placeholder">请选择</div><div class="select placeholder">请选择</div></div></div>
               <div class="field">
-                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:${CI_COMMIT_ID}。
-支持固定值或流水线变量。
-常用变量：
-${CI_COMMIT_ID}：8位 Commit ID
-${CI_COMMIT_SHA}：完整 Commit ID
-${CI_COMMIT_REF_NAME}：分支或 Tag 名
-${BUILD_NUMBER}：流水线运行编号
+                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:CI_COMMIT_ID。
+支持固定值或流程配置中维护的流水线变量。
 
-不填写时使用流程配置中的默认镜像后缀。">?</span></div>
+不填写时使用默认镜像后缀。">?</span></div>
                 <div class="combo">
-                  <input class="input combo-input" placeholder="选择流程变量或输入新的镜像 Tag" aria-label="镜像 Tag">
+                  <input class="input combo-input" placeholder="请选择镜像 Tag" aria-label="镜像 Tag">
                   <div class="combo-menu">
-                    <div class="combo-option" data-value="${IMAGE_TAG}"><div class="combo-option-title">${IMAGE_TAG}</div><div class="combo-option-desc">流程配置维护的默认镜像后缀</div></div>
-                    <div class="combo-option" data-value="${CI_COMMIT_ID}"><div class="combo-option-title">${CI_COMMIT_ID}</div><div class="combo-option-desc">8位 Commit ID</div></div>
-                    <div class="combo-option" data-value="${BUILD_NUMBER}"><div class="combo-option-title">${BUILD_NUMBER}</div><div class="combo-option-desc">流水线运行编号</div></div>
+                    <div class="combo-option" data-value="IMAGE_TAG"><div class="combo-option-title">IMAGE_TAG</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_ID"><div class="combo-option-title">CI_COMMIT_ID</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_SHA"><div class="combo-option-title">CI_COMMIT_SHA</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_REF_NAME"><div class="combo-option-title">CI_COMMIT_REF_NAME</div></div>
+                    <div class="combo-option" data-value="BUILD_NUMBER"><div class="combo-option-title">BUILD_NUMBER</div></div>
                   </div>
                 </div>
               </div>
@@ -737,21 +726,18 @@ ${BUILD_NUMBER}：流水线运行编号
               <div class="field"><div class="label"><span class="required">*</span>DomeOS 项目 <span class="help">?</span></div><div class="select placeholder">请选择项目</div></div>
               <div class="field"><div class="label"><span class="required">*</span>DomeOS 工程 <span class="help">?</span></div><div class="select placeholder">请选择工程</div></div>
               <div class="field">
-                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:${CI_COMMIT_ID}。
-支持固定值或流水线变量。
-常用变量：
-${CI_COMMIT_ID}：8位 Commit ID
-${CI_COMMIT_SHA}：完整 Commit ID
-${CI_COMMIT_REF_NAME}：分支或 Tag 名
-${BUILD_NUMBER}：流水线运行编号
+                <div class="label">镜像 Tag <span class="help help-tip" data-tip="镜像 Tag 是镜像版本标识，会拼接在镜像名称后，例如 backend:CI_COMMIT_ID。
+支持固定值或流程配置中维护的流水线变量。
 
-不填写时使用流程配置中的默认镜像后缀。">?</span></div>
+不填写时使用默认镜像后缀。">?</span></div>
                 <div class="combo">
-                  <input class="input combo-input" placeholder="选择流程变量或输入新的镜像 Tag" aria-label="镜像 Tag">
+                  <input class="input combo-input" placeholder="请选择镜像 Tag" aria-label="镜像 Tag">
                   <div class="combo-menu">
-                    <div class="combo-option" data-value="${IMAGE_TAG}"><div class="combo-option-title">${IMAGE_TAG}</div><div class="combo-option-desc">流程配置维护的默认镜像后缀</div></div>
-                    <div class="combo-option" data-value="${CI_COMMIT_ID}"><div class="combo-option-title">${CI_COMMIT_ID}</div><div class="combo-option-desc">8位 Commit ID</div></div>
-                    <div class="combo-option" data-value="${BUILD_NUMBER}"><div class="combo-option-title">${BUILD_NUMBER}</div><div class="combo-option-desc">流水线运行编号</div></div>
+                    <div class="combo-option" data-value="IMAGE_TAG"><div class="combo-option-title">IMAGE_TAG</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_ID"><div class="combo-option-title">CI_COMMIT_ID</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_SHA"><div class="combo-option-title">CI_COMMIT_SHA</div></div>
+                    <div class="combo-option" data-value="CI_COMMIT_REF_NAME"><div class="combo-option-title">CI_COMMIT_REF_NAME</div></div>
+                    <div class="combo-option" data-value="BUILD_NUMBER"><div class="combo-option-title">BUILD_NUMBER</div></div>
                   </div>
                 </div>
               </div>
