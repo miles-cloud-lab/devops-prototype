@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI 辅助代码评审原型</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      background: #f2f6f9;
+      color: #1f2933;
+      font-size: 14px;
+    }
+    .topbar {
+      height: 48px;
+      background: #001529;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 18px;
+      white-space: nowrap;
+    }
+    .brand {
+      width: 126px;
+      font-size: 24px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .cloud {
+      width: 20px;
+      height: 13px;
+      border-radius: 12px;
+      background: #1890ff;
+      position: relative;
+      display: inline-block;
+    }
+    .cloud:before, .cloud:after {
+      content: "";
+      position: absolute;
+      background: #1890ff;
+      border-radius: 50%;
+    }
+    .cloud:before { width: 12px; height: 12px; left: 3px; top: -7px; }
+    .cloud:after { width: 14px; height: 14px; right: 1px; top: -9px; }
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      color: rgba(255,255,255,.82);
+      flex: 1;
+      overflow: hidden;
+      font-size: 13px;
+    }
+    .nav span { display: inline-flex; align-items: center; gap: 5px; }
+    .search {
+      width: 300px;
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: rgba(255,255,255,.9);
+      font-size: 13px;
+    }
+    .avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #1890ff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+    }
+    .layout {
+      display: grid;
+      grid-template-columns: 198px minmax(0, 1fr);
+      min-height: calc(100vh - 48px);
+    }
+    .sider {
+      background: #001529;
+      color: rgba(255,255,255,.78);
+      min-height: calc(100vh - 48px);
+    }
+    .service-title {
+      height: 49px;
+      line-height: 49px;
+      padding-left: 22px;
+      color: #fff;
+      font-size: 15px;
+      border-top: 1px solid rgba(255,255,255,.24);
+      border-bottom: 1px solid rgba(255,255,255,.24);
+    }
+    .menu-item {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-left: 22px;
+    }
+    .menu-item.child { padding-left: 48px; background: #000c17; }
+    .menu-item.hidden { display: none; }
+    .menu-item.active { background: #1890ff; color: #fff; }
+    .content {
+      min-width: 0;
+      padding: 0;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .white-page {
+      background: #fff;
+      min-height: calc(100vh - 48px);
+      padding: 24px 18px 20px;
+    }
+    .page-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    .notice {
+      height: 40px;
+      border: 1px solid #91caff;
+      background: #e6f4ff;
+      color: #1f2933;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 12px;
+      margin-bottom: 18px;
+    }
+    .filter-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .filter {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 14px;
+      border: 1px solid #d9dee8;
+      background: #fff;
+      color: #344054;
+    }
+    .filter.active {
+      background: #1890ff;
+      color: #fff;
+      border-color: #1890ff;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      display: inline-block;
+      background: #98a2b3;
+    }
+    .dot.green { background: #52c41a; }
+    .dot.orange { background: #faad14; }
+    .dot.red { background: #ff4d4f; }
+    .dot.blue { background: #1890ff; }
+    .dot.gray { background: #98a2b3; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      background: #fafafa;
+      height: 40px;
+      color: #1f2933;
+      font-weight: 500;
+      border-bottom: 1px solid #edf0f5;
+      padding: 0 8px;
+      white-space: nowrap;
+    }
+    td {
+      height: 47px;
+      border-bottom: 1px solid #edf0f5;
+      padding: 0 8px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    a { color: #1677ff; text-decoration: none; }
+    .risk {
+      display: inline-flex;
+      align-items: center;
+      height: 22px;
+      padding: 0 8px;
+      border-radius: 3px;
+      font-size: 12px;
+      border: 1px solid transparent;
+    }
+    .risk.critical { background: #fff1f0; color: #a8071a; border-color: #ff7875; }
+    .risk.high { background: #fff1f0; color: #cf1322; border-color: #ffa39e; }
+    .risk.medium { background: #fff7e6; color: #ad6800; border-color: #ffd591; }
+    .risk.low { background: #e6f4ff; color: #0958d9; border-color: #91caff; }
+    .risk.pass { background: #f6ffed; color: #389e0d; border-color: #b7eb8f; }
+    .muted { color: #667085; }
+    .summary-cell {
+      max-width: 270px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .pagination {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 10px;
+      padding-top: 14px;
+      color: #344054;
+      font-size: 13px;
+    }
+    .pipeline-shell {
+      background: #eef3f8;
+      min-height: calc(100vh - 48px);
+      position: relative;
+      overflow: hidden;
+    }
+    .pipeline-head {
+      height: 66px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 0 26px;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .pipeline-head .back { color: #1677ff; }
+    .pipeline-head .name { font-weight: 600; }
+    .pipeline-head .navtab {
+      height: 66px;
+      line-height: 66px;
+      color: #1f2933;
+    }
+    .pipeline-head .navtab.active {
+      color: #1677ff;
+      border-bottom: 2px solid #1677ff;
+    }
+    .pipeline-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 8px;
+    }
+    .btn {
+      height: 32px;
+      padding: 0 14px;
+      border: 1px solid #d9dee8;
+      background: #fff;
+      color: #344054;
+      border-radius: 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      white-space: nowrap;
+      text-decoration: none;
+    }
+    .btn.primary {
+      background: #1890ff;
+      border-color: #1890ff;
+      color: #fff;
+    }
+    .btn.link {
+      border-color: transparent;
+      color: #1677ff;
+      background: transparent;
+      padding: 0 4px;
+    }
+    .stages {
+      display: grid;
+      grid-template-columns: repeat(5, 284px);
+      width: 1420px;
+      min-height: 790px;
+      padding-top: 16px;
+      margin-right: 444px;
+      position: relative;
+      z-index: 1;
+    }
+    .stage {
+      border-right: 1px dashed #d6dde8;
+      padding-top: 8px;
+      text-align: center;
+      position: relative;
+    }
+    .stage-title {
+      height: 34px;
+      font-weight: 500;
+    }
+    .node {
+      width: 134px;
+      height: 40px;
+      margin: 86px auto 0;
+      background: #fff;
+      border: 1px solid #d9dee8;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(16,24,40,.12);
+      position: relative;
+    }
+    .node.active { border-color: #1890ff; color: #0958d9; }
+    .node.ai {
+      margin-top: 24px;
+      width: 150px;
+      border-color: #91caff;
+      background: #f0f8ff;
+    }
+    .flowline {
+      height: 1px;
+      background: #ccd5e1;
+      position: absolute;
+      left: 0;
+      width: 1420px;
+      top: 164px;
+      z-index: 0;
+    }
+    .drawer {
+      position: absolute;
+      right: 0;
+      top: 66px;
+      bottom: 0;
+      width: 444px;
+      background: #fff;
+      box-shadow: -6px 0 14px rgba(16,24,40,.12);
+      padding: 20px 24px;
+      overflow: auto;
+      z-index: 3;
+    }
+    .pipeline-canvas {
+      position: absolute;
+      left: 0;
+      right: 444px;
+      top: 66px;
+      bottom: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+    .drawer-title {
+      font-weight: 600;
+      font-size: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .form-section {
+      border-top: 1px solid #edf0f5;
+      padding-top: 18px;
+      margin-top: 18px;
+    }
+    .section-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .form-item { margin-bottom: 14px; }
+    .label {
+      display: block;
+      color: #344054;
+      margin-bottom: 7px;
+    }
+    .label.required:before {
+      content: "* ";
+      color: #ff4d4f;
+    }
+    .input, .select, .textarea {
+      width: 100%;
+      min-height: 32px;
+      border: 1px solid #d9dee8;
+      padding: 6px 10px;
+      color: #1f2933;
+      background: #fff;
+    }
+    .input.disabled {
+      background: #f5f5f5;
+      color: #98a2b3;
+    }
+    .textarea { min-height: 70px; resize: none; line-height: 1.55; }
+    .radio-group, .check-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      color: #344054;
+    }
+    .radio, .check {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .fake-radio, .fake-check {
+      width: 14px;
+      height: 14px;
+      border: 1px solid #b8c1d1;
+      display: inline-block;
+      background: #fff;
+    }
+    .fake-radio { border-radius: 50%; }
+    .fake-radio.on {
+      border: 4px solid #1890ff;
+    }
+    .fake-check.on {
+      background: #1890ff;
+      border-color: #1890ff;
+      position: relative;
+    }
+    .fake-check.on:after {
+      content: "";
+      width: 6px;
+      height: 3px;
+      border-left: 1px solid #fff;
+      border-bottom: 1px solid #fff;
+      transform: rotate(-45deg);
+      position: absolute;
+      left: 3px;
+      top: 3px;
+    }
+    .switch {
+      width: 40px;
+      height: 22px;
+      border-radius: 12px;
+      background: #1890ff;
+      position: relative;
+      cursor: pointer;
+      transition: background .18s ease;
+    }
+    .switch:after {
+      content: "";
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #fff;
+      position: absolute;
+      right: 2px;
+      top: 2px;
+      transition: transform .18s ease, left .18s ease, right .18s ease;
+    }
+    .switch.off {
+      background: #b8c0cc;
+    }
+    .switch.off:after {
+      right: auto;
+      left: 2px;
+    }
+    .switch-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .switch-state {
+      min-width: 42px;
+      color: #667085;
+      font-size: 12px;
+      text-align: right;
+    }
+    .node.ai {
+      display: none;
+    }
+    .ai-disabled .ai-only {
+      display: none !important;
+    }
+    .ai-disabled #list th:nth-child(7),
+    .ai-disabled #list th:nth-child(8),
+    .ai-disabled #list th:nth-child(9),
+    .ai-disabled #list th:nth-child(10),
+    .ai-disabled #list td:nth-child(7),
+    .ai-disabled #list td:nth-child(8),
+    .ai-disabled #list td:nth-child(9),
+    .ai-disabled #list td:nth-child(10) {
+      display: none;
+    }
+    .help {
+      color: #667085;
+      font-size: 12px;
+      line-height: 1.5;
+      margin-top: 6px;
+    }
+    .detail-shell {
+      background: #fff;
+      min-height: calc(100vh - 48px);
+    }
+    .meta {
+      height: 96px;
+      background: #fff;
+      display: flex;
+      align-items: flex-start;
+      gap: 36px;
+      padding: 18px 24px;
+      border-bottom: 16px solid #f2f6f9;
+    }
+    .meta-item {
+      min-width: 112px;
+      border-right: 1px solid #e5e7eb;
+      padding-right: 28px;
+    }
+    .meta-label {
+      color: #1f2933;
+      margin-bottom: 10px;
+    }
+    .meta-value {
+      font-size: 12px;
+    }
+    .review-body {
+      padding: 0 16px 16px;
+    }
+    .review-header {
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .review-title {
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .toolbar .divider {
+      width: 1px;
+      height: 16px;
+      background: #d8dee8;
+    }
+    .review-grid {
+      display: grid;
+      grid-template-columns: 260px minmax(620px, 1fr) 360px;
+      min-height: 650px;
+      border-top: 1px solid #edf0f5;
+    }
+    .file-tree {
+      border-right: 1px solid #edf0f5;
+      padding: 12px;
+      overflow: auto;
+    }
+    .tree-title {
+      font-weight: 500;
+      margin-bottom: 18px;
+    }
+    .file-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      height: 32px;
+      color: #1f2933;
+      font-size: 13px;
+    }
+    .file-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .diff {
+      padding: 8px 10px 24px;
+      overflow: auto;
+    }
+    .file-bar {
+      height: 34px;
+      background: #f8fafc;
+      border: 1px solid #cfd7e6;
+      border-bottom: 0;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .code-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 12px;
+      border: 1px solid #cfd7e6;
+    }
+    .code-table td {
+      height: 24px;
+      border-bottom: 0;
+      padding: 0 8px;
+      white-space: pre;
+    }
+    .ln {
+      width: 52px;
+      color: #667085;
+      text-align: right;
+      background: #f8fafc;
+      user-select: none;
+    }
+    .code {
+      color: #0f172a;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .add .ln, .add .code { background: #e8faee; }
+    .old .code { color: #dc2626; }
+    .new .code { color: #087a2d; }
+    .ai-comment td {
+      padding: 0;
+      white-space: normal;
+      height: auto;
+    }
+    .inline-card {
+      margin: 8px 12px 8px 68px;
+      border: 1px solid #ffd591;
+      background: #fffaf0;
+      border-radius: 4px;
+      padding: 10px 12px;
+      font-family: "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+      line-height: 1.55;
+    }
+    .inline-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+    .inline-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+      color: #1677ff;
+      font-size: 12px;
+    }
+    .inline-actions span,
+    .issue-action {
+      cursor: pointer;
+    }
+    .ai-panel {
+      border-left: 1px solid #edf0f5;
+      background: #fff;
+      padding: 14px;
+      overflow: auto;
+    }
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    .panel-subtitle {
+      color: #667085;
+      font-size: 12px;
+      font-weight: 400;
+      margin-top: 4px;
+    }
+    .panel-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .ai-tabs {
+      display: flex;
+      gap: 8px;
+      margin: 0 0 12px;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .ai-tab {
+      padding: 0 2px 8px;
+      color: #667085;
+      font-size: 13px;
+    }
+    .ai-tab.active {
+      color: #1677ff;
+      border-bottom: 2px solid #1677ff;
+      font-weight: 600;
+    }
+    .score-box {
+      border: 1px solid #ffd591;
+      background: #fff7e6;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .score {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .desc {
+      color: #475467;
+      line-height: 1.55;
+      font-size: 13px;
+    }
+    .issue {
+      border: 1px solid #edf0f5;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+    .issue-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .issue-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 8px;
+      color: #1677ff;
+      font-size: 12px;
+    }
+    .review-decision {
+      border: 1px solid #d9e8ff;
+      background: #f5f9ff;
+      padding: 10px;
+      margin-top: 12px;
+    }
+    .decision-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .test-list {
+      padding-left: 18px;
+      line-height: 1.8;
+      color: #475467;
+      font-size: 13px;
+    }
+    @media (max-width: 1280px) {
+      .review-grid { grid-template-columns: 220px minmax(560px, 1fr); }
+      .ai-panel { display: none; }
+      .search { display: none; }
+      .nav { gap: 12px; }
+    }
+  </style>
+</head>
+<body class="ai-disabled">
+  <div class="topbar">
+    <div class="brand"><span class="cloud"></span>Panther</div>
+    <div class="nav">
+      <span>控制台</span>
+      <span>全部产品</span>
+      <span>Flux DevOps</span>
+      <span>Redis</span>
+      <span>负载均衡 SCLB</span>
+      <span>CMDB</span>
+      <span>CVM</span>
+    </div>
+    <div class="search">支持输入关键词搜索产品和文档</div>
+    <div class="user"><span class="avatar">王</span><span>王铭浩</span></div>
+  </div>
+
+  <div class="layout">
+    <aside class="sider">
+      <div class="service-title">Flux DevOps</div>
+      <div class="menu-item">概览</div>
+      <div class="menu-item">应用</div>
+      <div class="menu-item menu-pipeline">流水线</div>
+      <div class="menu-item child active menu-pipeline-child menu-pipeline-list" data-page-target="config">流水线列表</div>
+      <div class="menu-item child menu-pipeline-child">自定义插件</div>
+      <div class="menu-item">环境管理</div>
+      <div class="menu-item">代码管理</div>
+      <div class="menu-item">制品仓库</div>
+      <div class="menu-item menu-review" data-page-target="list">代码评审</div>
+      <div class="menu-item">操作审计</div>
+    </aside>
+
+    <main class="content">
+      <section id="config" class="page active">
+        <div class="pipeline-shell">
+          <div class="pipeline-head">
+            <span class="back">返回</span>
+            <span class="name">test03-wmh</span>
+            <span class="navtab">基本信息</span>
+            <span class="navtab active">流程详情</span>
+            <span class="navtab">流程配置</span>
+            <span class="navtab">触发规则</span>
+            <span class="navtab">报警通知</span>
+            <div class="pipeline-actions">
+              <button class="btn">仅保存</button>
+              <button class="btn primary">保存并运行</button>
+            </div>
+          </div>
+          <div class="pipeline-canvas">
+            <div class="flowline"></div>
+            <div class="stages">
+              <div class="stage">
+                <div class="stage-title">代码检出</div>
+                <div class="node">官方仓库</div>
+              </div>
+              <div class="stage">
+                <div class="stage-title">代码评审</div>
+                <div class="node active">代码评审</div>
+              </div>
+              <div class="stage">
+                <div class="stage-title">开启上线流程</div>
+                <div class="node">人工审批</div>
+              </div>
+              <div class="stage">
+                <div class="stage-title">交付</div>
+                <div class="node">交付到对象存储</div>
+                <div class="node">备份资源</div>
+              </div>
+              <div class="stage">
+                <div class="stage-title">代码发布</div>
+                <div class="node">发布任务</div>
+              </div>
+            </div>
+          </div>
+          <aside class="drawer">
+            <div class="drawer-title">
+              <span>编辑任务</span>
+              <button class="btn link">删除</button>
+            </div>
+            <div class="notice">DevOps 将根据您选择的源分支与目标分支做代码对比。</div>
+            <div class="form-item">
+              <label class="label required">任务名称</label>
+              <div class="input">代码评审</div>
+            </div>
+            <div class="form-item">
+              <label class="label required">源分支</label>
+              <div class="input disabled">master</div>
+            </div>
+            <div class="form-item">
+              <label class="label required">目标分支</label>
+              <div class="select">master</div>
+            </div>
+            <div class="form-item">
+              <label class="label required">评审人</label>
+              <div class="select">王铭浩(minghaowang220757@sohu-inc.com)</div>
+            </div>
+            <div class="form-item">
+              <label class="label required">通过方式</label>
+              <div class="radio-group">
+                <span class="radio"><span class="fake-radio on"></span>或</span>
+                <span class="radio"><span class="fake-radio"></span>与</span>
+              </div>
+              <div class="help">任意一位评审人通过时，最终评审状态即变为通过。</div>
+            </div>
+
+            <div class="form-section">
+              <div class="section-title">
+                <span>AI 辅助评审</span>
+                <span class="switch-wrap">
+                  <span id="aiReviewState" class="switch-state">未启用</span>
+                  <span id="aiReviewSwitch" class="switch off" role="switch" tabindex="0" aria-checked="false"></span>
+                </span>
+              </div>
+              <div id="aiReviewHelp" class="help">自动生成 AI 初审，辅助评审人识别风险。</div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="list" class="page">
+        <div class="white-page">
+          <div class="page-title">代码评审</div>
+          <div class="notice">流水线中配置了代码评审任务后，需要评审人完成审批。启用 AI 辅助评审后，系统会生成初审结果。</div>
+          <div class="filter-row">
+            <span class="filter active">全部</span>
+            <span class="filter"><span class="dot green"></span>我提交的</span>
+            <span class="filter"><span class="dot orange"></span>我评审的</span>
+            <span class="filter ai-only"><span class="dot gray"></span>待评审</span>
+            <span class="filter ai-only"><span class="dot blue"></span>评审中</span>
+            <span class="filter ai-only"><span class="dot red"></span>有风险</span>
+            <span class="filter ai-only"><span class="dot green"></span>无明显风险</span>
+            <span class="filter ai-only"><span class="dot red"></span>评审失败</span>
+          </div>
+          <div class="filter-row">
+            <span class="filter active">全部状态</span>
+            <span class="filter"><span class="dot orange"></span>待审核</span>
+            <span class="filter"><span class="dot green"></span>已通过</span>
+            <span class="filter"><span class="dot red"></span>已驳回</span>
+          </div>
+          <div class="filter-row ai-only">
+            <span class="filter active">全部风险</span>
+            <span class="filter">严重</span>
+            <span class="filter">高</span>
+            <span class="filter">中</span>
+            <span class="filter">低</span>
+            <span class="filter">无</span>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th>流水线执行ID</th>
+                <th>流水线</th>
+                <th>所属应用</th>
+                <th>代码项目</th>
+                <th>源分支</th>
+                <th>目标分支</th>
+                <th>AI 评审</th>
+                <th>风险等级</th>
+                <th>问题数</th>
+                <th>AI摘要</th>
+                <th>审核状态</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><a href="#">290994</a></td>
+                <td>test03-wmh</td>
+                <td>wmh-test-demo</td>
+                <td>minghaowang220757/my-first-project</td>
+                <td>master</td>
+                <td>master</td>
+                <td><span class="dot orange"></span> 有风险</td>
+                <td><span class="risk medium">中风险</span></td>
+                <td>中 1，低 1</td>
+                <td class="summary-cell">直接修改入参对象，建议关注副作用风险</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290723</a></td>
+                <td>st-web-239</td>
+                <td>seatunnel-server</td>
+                <td>bigdata_panther/panther-seatunnel-web</td>
+                <td>release_20260513_101352</td>
+                <td>master</td>
+                <td><span class="dot green"></span> 无明显风险</td>
+                <td><span class="risk pass">无</span></td>
+                <td>0</td>
+                <td class="summary-cell">本次变更仅调整展示文案，未发现明显风险</td>
+                <td><span class="dot green"></span> 已通过</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290717</a></td>
+                <td>bigdata-online</td>
+                <td>panther-fe-online</td>
+                <td>panthers/panther-bigdata</td>
+                <td>release_20260513_100803</td>
+                <td>master</td>
+                <td><span class="dot red"></span> 有风险</td>
+                <td><span class="risk high">高风险</span></td>
+                <td>高 1，中 2</td>
+                <td class="summary-cell">接口鉴权逻辑发生变化，建议补充权限回归测试</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290716</a></td>
+                <td>pay-core-online</td>
+                <td>payment-core</td>
+                <td>finance/payment-service</td>
+                <td>feature_auth_check</td>
+                <td>master</td>
+                <td><span class="dot red"></span> 有风险</td>
+                <td><span class="risk critical">严重</span></td>
+                <td>严重 1，高 1</td>
+                <td class="summary-cell">支付回调验签逻辑被绕过，需优先确认安全风险</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290702</a></td>
+                <td>st-web-239</td>
+                <td>seatunnel-server</td>
+                <td>bigdata_panther/panther-seatunnel-web</td>
+                <td>release_20260513_095051</td>
+                <td>master</td>
+                <td><span class="dot blue"></span> 评审中</td>
+                <td><span class="risk low">--</span></td>
+                <td>--</td>
+                <td class="summary-cell muted">AI 正在分析 diff 与相关上下文</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290701</a></td>
+                <td>docs-preview</td>
+                <td>devops-docs</td>
+                <td>platform/devops-docs</td>
+                <td>docs_ai_review</td>
+                <td>master</td>
+                <td><span class="dot gray"></span> 待评审</td>
+                <td><span class="risk low">--</span></td>
+                <td>--</td>
+                <td class="summary-cell muted">等待 AI 评审任务开始</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290699</a></td>
+                <td>front-style-check</td>
+                <td>panther-fe-online</td>
+                <td>panthers/panther-console</td>
+                <td>style_button</td>
+                <td>main</td>
+                <td><span class="dot orange"></span> 有风险</td>
+                <td><span class="risk low">低</span></td>
+                <td>低 1</td>
+                <td class="summary-cell">样式变量命名不一致，建议合并前修正</td>
+                <td><span class="dot orange"></span> 待审核</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290221</a></td>
+                <td>panther-ai-online</td>
+                <td>panther-fe-online</td>
+                <td>panthers/panther-ai</td>
+                <td>release_20260512_184454</td>
+                <td>main</td>
+                <td><span class="dot green"></span> 无明显风险</td>
+                <td><span class="risk pass">无</span></td>
+                <td>0</td>
+                <td class="summary-cell">本次变更为样式调整，未发现明显风险</td>
+                <td><span class="dot green"></span> 已通过</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+              <tr>
+                <td><a href="#">290209</a></td>
+                <td>panther-ai-online</td>
+                <td>panther-fe-online</td>
+                <td>panthers/panther-ai</td>
+                <td>release_20260512_183543</td>
+                <td>main</td>
+                <td><span class="dot red"></span> 评审失败</td>
+                <td><span class="risk low">--</span></td>
+                <td>--</td>
+                <td class="summary-cell muted">diff 文件过大，需手动重新评审</td>
+                <td><span class="dot red"></span> 已驳回</td>
+                <td><a href="#" data-page-target="detail">详情</a></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <span>总数: 4259</span>
+            <button class="btn primary">1</button>
+            <span>2</span>
+            <span>3</span>
+            <span>4</span>
+            <span>5</span>
+            <span>...</span>
+            <span>426</span>
+            <button class="btn">10 条/页</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="detail" class="page">
+        <div class="detail-shell">
+          <div class="meta">
+            <div class="meta-item">
+              <div class="meta-label">所属项目</div>
+              <div class="meta-value">seatunnel-server</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">流水线</div>
+              <div class="meta-value">st-web-239</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">源分支</div>
+              <div class="meta-value">release_20260513_101352</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">目标分支</div>
+              <div class="meta-value">master</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">审核状态</div>
+              <div class="meta-value"><span class="dot orange"></span> 待审核</div>
+            </div>
+            <div class="meta-item ai-only">
+              <div class="meta-label">AI 评审</div>
+              <div class="meta-value"><span class="risk medium">中风险 2个问题</span></div>
+            </div>
+          </div>
+
+          <div class="review-body">
+            <div class="review-header">
+              <div class="review-title">代码评审</div>
+              <div class="toolbar">
+                <span>Files Changed: <a>1</a></span>
+                <span>Lines Changed: <span style="color:#16a34a;">+8</span> <span style="color:#dc2626;">-0</span></span>
+                <span>Commits: <a>3</a></span>
+                <span>Theme: default</span>
+                <span class="divider"></span>
+                <span class="ai-only">AI 初审：<span class="risk medium">有风险 2</span></span>
+                <button class="btn ai-only">查看结果</button>
+                <button class="btn ai-only">重新评审</button>
+                <button class="btn primary">评审</button>
+              </div>
+            </div>
+
+            <div class="review-grid">
+              <aside class="file-tree">
+                <div class="tree-title">文件目录</div>
+                <div class="file-row">
+                  <span class="file-name">seatunnel-server/seatunnel-app/src/main/java/org/apache/seatunnel/app/service/impl/JobInstanceServiceImpl.java</span>
+                  <span class="risk medium ai-only">中 2</span>
+                </div>
+              </aside>
+
+              <div class="diff">
+                <div class="file-bar">
+                  <span>JobInstanceServiceImpl.java</span>
+                  <span style="color:#16a34a;">+8</span>
+                  <span style="color:#dc2626;">-0</span>
+                </div>
+                <table class="code-table">
+                  <tr>
+                    <td class="ln">322</td>
+                    <td class="code old">String jobConfig = createJobConfig(job, latestVersion, temporaryParam);</td>
+                    <td class="ln">322</td>
+                    <td class="code new">String jobConfig = createJobConfig(job, latestVersion, temporaryParam);</td>
+                  </tr>
+                  <tr>
+                    <td class="ln">323</td>
+                    <td class="code">jobInstance.setJobConfig(jobConfig);</td>
+                    <td class="ln">323</td>
+                    <td class="code">jobInstance.setJobConfig(jobConfig);</td>
+                  </tr>
+                  <tr>
+                    <td class="ln">324</td>
+                    <td class="code">if (StringUtils.isEmpty(jobInstance.getParam()) &amp;&amp; temporaryParam != null) {</td>
+                    <td class="ln">324</td>
+                    <td class="code">if (StringUtils.isEmpty(jobInstance.getParam()) &amp;&amp; temporaryParam != null) {</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">325</td>
+                    <td class="code">//移除不需要的参数，避免太长，插入失败</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">326</td>
+                    <td class="code">List&lt;Map.Entry&lt;String, Object&gt;&gt; removeList = temporaryParam.entrySet().stream()</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">327</td>
+                    <td class="code">    .filter(a -&gt; a != null &amp;&amp; a.getValue() != null &amp;&amp; a.getKey() != null)</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">328</td>
+                    <td class="code">    .filter(a -&gt; a.getValue().toString().endsWith(".properties"))</td>
+                  </tr>
+                  <tr class="ai-comment">
+                    <td colspan="4">
+                      <div class="inline-card">
+                        <div class="inline-head"><span class="risk medium">AI 中风险</span><span>直接修改入参对象可能产生副作用</span></div>
+                        <div>下面的 remove 操作会修改 temporaryParam 原始对象。如果该对象后续还会被复用，可能导致调用链上的参数缺失。建议构造 filteredParam 后再序列化。</div>
+                        <div class="inline-actions"><span>采纳</span><span>忽略</span><span>误报</span><span>转人工确认</span></div>
+                      </div>
+                    </td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">329</td>
+                    <td class="code">    .collect(Collectors.toList());</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">330</td>
+                    <td class="code">for (Map.Entry&lt;String, Object&gt; stringObjectEntry : removeList) {</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">331</td>
+                    <td class="code">    temporaryParam.remove(stringObjectEntry.getKey(), stringObjectEntry.getValue());</td>
+                  </tr>
+                  <tr class="add">
+                    <td class="ln"></td>
+                    <td class="code"></td>
+                    <td class="ln">332</td>
+                    <td class="code">}</td>
+                  </tr>
+                  <tr>
+                    <td class="ln">325</td>
+                    <td class="code">jobInstance.setParam(JSONObject.toJSONString(temporaryParam));</td>
+                    <td class="ln">333</td>
+                    <td class="code">jobInstance.setParam(JSONObject.toJSONString(temporaryParam));</td>
+                  </tr>
+                  <tr>
+                    <td class="ln">326</td>
+                    <td class="code">}</td>
+                    <td class="ln">334</td>
+                    <td class="code">}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <aside class="ai-panel">
+                <div class="panel-head">
+                  <div>
+                    <div>AI 初审结果</div>
+                    <div class="panel-subtitle">2026-05-18 14:36 完成，本结果仅供人工评审参考</div>
+                  </div>
+                  <div class="panel-actions">
+                    <button class="btn">重新评审</button>
+                  </div>
+                </div>
+                <div class="ai-tabs">
+                  <div class="ai-tab active">总览</div>
+                  <div class="ai-tab">问题 2</div>
+                  <div class="ai-tab">测试建议</div>
+                </div>
+                <div class="score-box">
+                  <div class="score">
+                    <strong>结论</strong>
+                    <span class="risk medium">有风险</span>
+                  </div>
+                  <div class="desc">本次变更在提交 job 参数前过滤 temporaryParam 中以 .properties 结尾的配置项，用于避免参数过大导致提交失败。</div>
+                </div>
+                <div class="section-title">发现问题</div>
+                <div class="issue">
+                  <div class="issue-title"><span class="risk medium">中</span><span>原地修改 temporaryParam</span></div>
+                  <div class="desc">文件：JobInstanceServiceImpl.java:326-331</div>
+                  <div class="desc">建议使用新的 Map 保存过滤结果，避免影响后续逻辑。</div>
+                  <div class="issue-footer">
+                    <span class="issue-action">定位到代码行</span>
+                    <span>采纳 · 忽略 · 误报</span>
+                  </div>
+                </div>
+                <div class="issue">
+                  <div class="issue-title"><span class="risk low">低</span><span>value.toString 判断语义不稳定</span></div>
+                  <div class="desc">文件：JobInstanceServiceImpl.java:328</div>
+                  <div class="desc">建议确认 value 类型，或显式限定 String 类型。</div>
+                  <div class="issue-footer">
+                    <span class="issue-action">定位到代码行</span>
+                    <span>采纳 · 忽略 · 误报</span>
+                  </div>
+                </div>
+                <div class="section-title">测试建议</div>
+                <ul class="test-list">
+                  <li>temporaryParam 包含 .properties 参数</li>
+                  <li>key 或 value 为空时过滤逻辑正常</li>
+                  <li>value 为非 String 类型时结果符合预期</li>
+                  <li>过滤后 jobInstance.param 内容正确</li>
+                </ul>
+                <div class="section-title">阻断说明</div>
+                <div class="desc">当前策略为仅提示，不影响流水线。人工评审人仍需完成最终审批。</div>
+                <div class="review-decision">
+                  <div class="desc">AI 发现 2 个问题。若继续通过，系统仅记录人工评审结论，不改变 AI 结果。</div>
+                  <div class="decision-actions">
+                    <button class="btn primary">通过</button>
+                    <button class="btn">驳回</button>
+                    <button class="btn">仅评论</button>
+                  </div>
+                </div>
+              </aside>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const pages = document.querySelectorAll(".page");
+    const menuItems = document.querySelectorAll(".menu-item");
+    const aiSwitch = document.getElementById("aiReviewSwitch");
+    const aiState = document.getElementById("aiReviewState");
+    const aiHelp = document.getElementById("aiReviewHelp");
+
+    function showPage(pageId) {
+      pages.forEach((page) => page.classList.toggle("active", page.id === pageId));
+      menuItems.forEach((item) => item.classList.remove("active"));
+      if (pageId === "config") {
+        document.querySelector(".menu-pipeline-list")?.classList.add("active");
+      }
+      if (pageId === "list" || pageId === "detail") {
+        document.querySelector(".menu-review")?.classList.add("active");
+      }
+    }
+
+    function setAiReviewEnabled(enabled) {
+      document.body.classList.toggle("ai-disabled", !enabled);
+      aiSwitch.classList.toggle("off", !enabled);
+      aiSwitch.setAttribute("aria-checked", String(enabled));
+      aiState.textContent = enabled ? "已启用" : "未启用";
+      aiHelp.textContent = "自动生成 AI 初审，辅助评审人识别风险。";
+    }
+
+    document.querySelectorAll("[data-page-target]").forEach((item) => {
+      item.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (item.dataset.pageTarget === "list" || item.dataset.pageTarget === "detail") {
+          setAiReviewEnabled(true);
+        }
+        showPage(item.dataset.pageTarget);
+        window.location.hash = item.dataset.pageTarget;
+      });
+    });
+
+    aiSwitch.addEventListener("click", () => {
+      setAiReviewEnabled(aiSwitch.getAttribute("aria-checked") !== "true");
+    });
+
+    aiSwitch.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        aiSwitch.click();
+      }
+    });
+
+    const initialPage = window.location.hash.replace("#", "");
+    if (initialPage === "list" || initialPage === "detail") {
+      setAiReviewEnabled(true);
+      showPage(initialPage);
+    }
+  </script>
+
+</body>
+</html>
