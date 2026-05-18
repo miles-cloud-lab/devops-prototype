@@ -5,6 +5,7 @@ DevOps console prototype and interaction design.
 ## Prototype Modules
 
 - `pipeline-version/`: pipeline manual run dialog with branch/tag selection.
+- `pipeline-build-trace/`: pipeline run source card and branch detail traceability.
 - `image-tag-config/`: image build task drawer with task-level image tag configuration.
 - `ai-code-review/`: AI-assisted code review for pipeline code review tasks.
 
