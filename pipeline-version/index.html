@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DevOps 流水线 Tag 启动原型</title>
+  <title>DevOps 流水线版本构建增强原型</title>
   <style>
     :root {
       --primary: #1890ff;
@@ -15,6 +15,7 @@
       --text: #1f1f1f;
       --muted: #8c8c8c;
       --line: #dfe7ef;
+      --danger: #ff4d4f;
     }
 
     * { box-sizing: border-box; }
@@ -350,6 +351,34 @@
     .close { font-size: 24px; color: #8c8c8c; font-weight: 300; }
     .modal-body { padding: 20px 20px 0; }
 
+    .mode-switch {
+      display: inline-flex;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      background: #fff;
+    }
+
+    .mode-btn {
+      min-width: 112px;
+      height: 32px;
+      border: 0;
+      background: #fff;
+      color: #595959;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    .mode-btn + .mode-btn {
+      border-left: 1px solid #d9d9d9;
+    }
+
+    .mode-btn.active {
+      background: #e6f4ff;
+      color: var(--primary);
+    }
+
     .source-box {
       border: 1px solid #e5e5e5;
       background: #fff;
@@ -357,9 +386,12 @@
 
     .source-grid {
       display: grid;
-      grid-template-columns: 220px 1fr;
+      grid-template-columns: 220px 1fr 72px;
       border-bottom: 1px solid #e5e5e5;
       min-height: 52px;
+    }
+    .source-grid.single {
+      grid-template-columns: 220px 1fr;
     }
 
     .source-grid:last-child { border-bottom: 0; }
@@ -367,6 +399,7 @@
       padding: 10px 12px;
       display: flex;
       align-items: center;
+      min-width: 0;
     }
     .cell.label { color: #333; }
     .repo {
@@ -374,6 +407,12 @@
       text-overflow: ellipsis;
       white-space: nowrap;
       color: #333;
+    }
+
+    .select-wrap {
+      display: flex;
+      align-items: center;
+      width: 100%;
     }
 
     .select {
@@ -399,6 +438,7 @@
       width: 120px;
       color: #333;
       margin-right: 8px;
+      flex: 0 0 auto;
     }
 
     .value-select {
@@ -462,6 +502,7 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      min-width: 0;
     }
 
     .branch-meta {
@@ -470,7 +511,44 @@
       font-size: 12px;
     }
 
+    .delete {
+      color: var(--danger);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      font-size: 18px;
+    }
+
+    .delete.disabled {
+      color: #d9d9d9;
+      cursor: not-allowed;
+    }
+
+    .add-ref {
+      height: 32px;
+      border: 1px dashed #d9d9d9;
+      color: #595959;
+      background: #fff;
+      width: 100%;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .add-ref:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
     .form-item { margin-top: 16px; }
+    .form-tip {
+      margin-top: 8px;
+      color: #8c8c8c;
+      font-size: 12px;
+      line-height: 20px;
+    }
     .form-label { margin-bottom: 8px; color: #333; }
     textarea {
       width: 100%;
@@ -593,30 +671,14 @@
         <span class="close" id="closeRunModal">×</span>
       </div>
       <div class="modal-body">
-        <div class="source-box">
-          <div class="source-grid">
-            <div class="cell label">代码源</div>
-            <div class="cell label">分支/标签</div>
-          </div>
-          <div class="source-grid">
-            <div class="cell repo">...ng220757/my-first-project.git</div>
-            <div class="cell">
-              <div class="select type-select" id="refTypeSelect">
-                <span id="refTypeText">分支</span>
-                <span class="arrow"></span>
-                <div class="dropdown-menu">
-                  <div class="dropdown-item active" data-ref-type="branch"><span class="check">✓</span><span>分支</span></div>
-                  <div class="dropdown-item" data-ref-type="tag"><span class="check"></span><span>标签</span></div>
-                </div>
-              </div>
-              <div class="select value-select" id="refValueSelect">
-                <span id="refValueText">master</span>
-                <span class="arrow"></span>
-                <div class="dropdown-menu value-dropdown" id="refValueMenu"></div>
-              </div>
-            </div>
-          </div>
+        <div class="mode-switch">
+          <button class="mode-btn active" data-mode="single">单分支模式</button>
+          <button class="mode-btn" data-mode="multi">多分支模式</button>
         </div>
+
+        <div class="source-box" id="sourceBox"></div>
+        <div class="form-tip" id="modeTip"></div>
+        <button class="add-ref hidden" id="addRef">＋ 添加运行分支/标签</button>
 
         <div class="form-item">
           <div class="form-label">运行备注</div>
@@ -631,16 +693,21 @@
   </div>
   <script>
     const state = {
-      type: "branch",
-      branch: "master",
-      tag: "v1.8.2"
+      mode: "single",
+      single: { type: "branch", value: "master" },
+      refs: [
+        { type: "branch", value: "master" },
+        { type: "branch", value: "branch-one" },
+        { type: "tag", value: "v1.8.2" }
+      ]
     };
 
     const options = {
       branch: [
         { value: "master", meta: "" },
         { value: "release/video-1.8", meta: "" },
-        { value: "feature/player", meta: "" }
+        { value: "feature/player", meta: "" },
+        { value: "branch-one", meta: "" }
       ],
       tag: [
         { value: "v1.8.2", meta: "" },
@@ -649,11 +716,9 @@
       ]
     };
 
-    const refTypeSelect = document.getElementById("refTypeSelect");
-    const refValueSelect = document.getElementById("refValueSelect");
-    const refTypeText = document.getElementById("refTypeText");
-    const refValueText = document.getElementById("refValueText");
-    const refValueMenu = document.getElementById("refValueMenu");
+    const sourceBox = document.getElementById("sourceBox");
+    const modeTip = document.getElementById("modeTip");
+    const addRef = document.getElementById("addRef");
     const openRunModal = document.getElementById("openRunModal");
     const runModal = document.getElementById("runModal");
     const modalMask = document.getElementById("modalMask");
@@ -673,68 +738,153 @@
     }
 
     function closeSelects(except) {
-      [refTypeSelect, refValueSelect].forEach((select) => {
+      document.querySelectorAll(".select.open").forEach((select) => {
         if (select !== except) select.classList.remove("open");
       });
     }
 
-    function renderType() {
-      refTypeText.textContent = state.type === "branch" ? "分支" : "标签";
-      refTypeSelect.querySelectorAll("[data-ref-type]").forEach((item) => {
-        const active = item.dataset.refType === state.type;
-        item.classList.toggle("active", active);
-        item.querySelector(".check").textContent = active ? "✓" : "";
-      });
+    function optionHtml(value, current, attr) {
+      const active = value === current;
+      return `<div class="dropdown-item ${active ? "active" : ""}" ${attr}="${value}">
+        <span class="check">${active ? "✓" : ""}</span>
+        <span>${value}</span>
+      </div>`;
     }
 
-    function renderValues() {
-      const currentValue = state.type === "branch" ? state.branch : state.tag;
-      refValueText.textContent = currentValue;
-      refValueMenu.innerHTML = options[state.type].map((item) => {
-        const active = item.value === currentValue;
-        return `
-          <div class="dropdown-item ${active ? "active" : ""}" data-ref-value="${item.value}">
-            <span class="check">${active ? "✓" : ""}</span>
-            <span class="branch-text">${item.value}</span>
-            ${item.meta ? `<span class="branch-meta">${item.meta}</span>` : ""}
+    function valueOptionHtml(item, current) {
+      const active = item.value === current;
+      return `<div class="dropdown-item ${active ? "active" : ""}" data-ref-value="${item.value}">
+        <span class="check">${active ? "✓" : ""}</span>
+        <span class="branch-text">${item.value}</span>
+        ${item.meta ? `<span class="branch-meta">${item.meta}</span>` : ""}
+      </div>`;
+    }
+
+    function typeSelectHtml(currentType) {
+      return `<div class="select type-select">
+        <span>${currentType === "branch" ? "分支" : "标签"}</span>
+        <span class="arrow"></span>
+        <div class="dropdown-menu">
+          ${optionHtml("分支", currentType === "branch" ? "分支" : "标签", "data-ref-type")}
+          ${optionHtml("标签", currentType === "tag" ? "标签" : "分支", "data-ref-type")}
+        </div>
+      </div>`;
+    }
+
+    function valueSelectHtml(currentType, currentValue, index) {
+      return `<div class="select value-select" data-index="${index}">
+        <span>${currentValue}</span>
+        <span class="arrow"></span>
+        <div class="dropdown-menu value-dropdown">
+          ${options[currentType].map((item) => valueOptionHtml(item, currentValue)).join("")}
+        </div>
+      </div>`;
+    }
+
+    function renderSourceBox() {
+      const isSingle = state.mode === "single";
+      const rows = isSingle
+        ? [{ type: state.single.type, value: state.single.value }]
+        : state.refs;
+
+      sourceBox.innerHTML = `
+        <div class="source-grid ${isSingle ? "single" : ""}">
+          <div class="cell label">代码源</div>
+          <div class="cell label">分支/标签</div>
+          ${isSingle ? "" : '<div class="cell label">操作</div>'}
+        </div>
+        ${rows.map((row, index) => `
+          <div class="source-grid ${isSingle ? "single" : ""}">
+            <div class="cell repo">...ng220757/my-first-project.git</div>
+            <div class="cell">
+              <div class="select-wrap">
+                ${typeSelectHtml(row.type)}
+                ${valueSelectHtml(row.type, row.value, index)}
+              </div>
+            </div>
+            ${isSingle ? "" : `<div class="cell"><span class="delete ${rows.length === 1 ? "disabled" : ""}" data-delete="${index}">⊖</span></div>`}
           </div>
-        `;
-      }).join("");
+        `).join("")}
+      `;
+
+      modeTip.textContent = isSingle
+        ? "单分支模式下仅支持选择一个分支或一个标签，不支持同时选择分支和标签。"
+        : "多分支模式下支持多个分支、多个标签，也支持分支和标签混选。";
+      addRef.classList.toggle("hidden", isSingle);
     }
 
-    refTypeSelect.addEventListener("click", (event) => {
-      event.stopPropagation();
-      closeSelects(refTypeSelect);
-      refTypeSelect.classList.toggle("open");
-    });
+    function renderModeButtons() {
+      document.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.mode === state.mode);
+      });
+    }
 
-    refTypeSelect.querySelectorAll("[data-ref-type]").forEach((item) => {
-      item.addEventListener("click", (event) => {
-        event.stopPropagation();
-        state.type = item.dataset.refType;
-        renderType();
-        renderValues();
-        refTypeSelect.classList.remove("open");
+    function render() {
+      renderModeButtons();
+      renderSourceBox();
+    }
+
+    document.querySelectorAll("[data-mode]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.mode = btn.dataset.mode;
+        closeSelects();
+        render();
       });
     });
 
-    refValueSelect.addEventListener("click", (event) => {
-      event.stopPropagation();
-      closeSelects(refValueSelect);
-      refValueSelect.classList.toggle("open");
+    sourceBox.addEventListener("click", (event) => {
+      const deleteBtn = event.target.closest("[data-delete]");
+      if (deleteBtn && state.mode === "multi" && state.refs.length > 1) {
+        state.refs.splice(Number(deleteBtn.dataset.delete), 1);
+        render();
+        return;
+      }
+
+      const typeOption = event.target.closest("[data-ref-type]");
+      if (typeOption) {
+        const selectWrap = typeOption.closest(".select-wrap");
+        const valueSelect = selectWrap.querySelector(".value-select");
+        const index = Number(valueSelect.dataset.index);
+        const nextType = typeOption.dataset.refType === "标签" ? "tag" : "branch";
+        const nextValue = options[nextType][0].value;
+        if (state.mode === "single") {
+          state.single.type = nextType;
+          state.single.value = nextValue;
+        } else {
+          state.refs[index].type = nextType;
+          state.refs[index].value = nextValue;
+        }
+        closeSelects();
+        render();
+        return;
+      }
+
+      const valueOption = event.target.closest("[data-ref-value]");
+      if (valueOption) {
+        const select = valueOption.closest(".value-select");
+        const index = Number(select.dataset.index);
+        if (state.mode === "single") {
+          state.single.value = valueOption.dataset.refValue;
+        } else {
+          state.refs[index].value = valueOption.dataset.refValue;
+        }
+        closeSelects();
+        render();
+        return;
+      }
+
+      const select = event.target.closest(".select");
+      if (select) {
+        event.stopPropagation();
+        closeSelects(select);
+        select.classList.toggle("open");
+      }
     });
 
-    refValueMenu.addEventListener("click", (event) => {
-      const item = event.target.closest("[data-ref-value]");
-      if (!item) return;
-      event.stopPropagation();
-      if (state.type === "branch") {
-        state.branch = item.dataset.refValue;
-      } else {
-        state.tag = item.dataset.refValue;
-      }
-      renderValues();
-      refValueSelect.classList.remove("open");
+    addRef.addEventListener("click", () => {
+      const candidate = options.branch.find((item) => !state.refs.some((ref) => ref.type === "branch" && ref.value === item.value)) || options.branch[0];
+      state.refs.push({ type: "branch", value: candidate.value });
+      render();
     });
 
     document.addEventListener("click", () => closeSelects());
@@ -743,9 +893,14 @@
     cancelRun.addEventListener("click", hideRunModal);
     confirmRun.addEventListener("click", hideRunModal);
     modalMask.addEventListener("click", hideRunModal);
-    renderType();
-    renderValues();
-    if (new URLSearchParams(window.location.search).get("modal") === "1") {
+
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get("mode");
+    if (urlMode === "multi") state.mode = "multi";
+    if (urlMode === "single") state.mode = "single";
+
+    render();
+    if (params.get("modal") === "1") {
       showRunModal();
     }
   </script>
