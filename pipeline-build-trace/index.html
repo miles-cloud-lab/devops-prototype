@@ -702,13 +702,13 @@
             <div class="repo-title"><span>https://code.sohuno.com</span></div>
             <div class="single-view">
               <div class="source-row"><span class="row-icon icon-project"></span><span class="source-value">pipeline-demo-2</span></div>
-              <div class="source-row"><span class="row-icon icon-branch"></span><span class="source-value">feature-20260515-saas</span></div>
-              <div class="source-row"><span class="row-icon icon-branch"></span><button class="source-link" id="openCommit">分支详情</button></div>
+              <div class="source-row"><span class="row-icon icon-branch"></span><span class="source-value">v1.2.0</span></div>
+              <div class="source-row"><span class="row-icon icon-branch"></span><button class="source-link" id="openCommit">版本详情</button></div>
             </div>
             <div class="multi-view">
               <div class="source-row"><span class="row-icon icon-project"></span><span class="source-value">foxeye</span></div>
               <div class="source-row"><span class="row-icon icon-branch"></span><span class="source-value">master</span></div>
-              <div class="source-row"><span class="row-icon icon-branch"></span><button class="source-link" id="openBranch">分支详情</button></div>
+              <div class="source-row"><span class="row-icon icon-branch"></span><button class="source-link" id="openBranch">版本详情</button></div>
             </div>
             <div class="source-footer">
               <span>2秒</span>
@@ -895,20 +895,21 @@
   <div class="mask" id="branchModal">
     <div class="modal">
       <div class="modal-header">
-        <span class="modal-title" id="modalTitle">分支信息</span>
+        <span class="modal-title" id="modalTitle">版本信息</span>
         <button class="close-x" data-close>×</button>
       </div>
       <div class="modal-body" id="branchDetailBody">
         <div class="publish-line">
-          <span>发布分支:</span>
+          <span>构建引用:</span>
           <span class="link">master</span>
         </div>
-        <div class="section-title">运行分支</div>
+        <div class="section-title">引用明细</div>
         <div class="branch-table">
           <table>
             <thead>
               <tr>
-                <th>分支</th>
+                <th>引用名称</th>
+                <th>类型</th>
                 <th>commitId</th>
                 <th>提交说明</th>
               </tr>
@@ -916,16 +917,19 @@
             <tbody>
               <tr>
                 <td><span class="link">bugfix/bugfix_20250105_repair</span></td>
+                <td>分支</td>
                 <td class="commit-cell" title="6f0bd8720bd0b4f994f664e23ade3a7fcdaf0012">6f0bd872</td>
                 <td>fix: 修复订单状态回写</td>
               </tr>
               <tr>
-                <td><span class="link">bugfix/bugfix_20250523_price</span></td>
+                <td><span class="link">v2026.05.23-rc1</span></td>
+                <td>标签</td>
                 <td class="commit-cell" title="7b9a17c3fa41e0eda6d23f73272cb100f29ab34">7b9a17c3</td>
                 <td>fix: 调整计费金额精度</td>
               </tr>
               <tr>
                 <td><span class="link">bugfix/bugfix_20250526_member</span></td>
+                <td>分支</td>
                 <td class="commit-cell" title="aacb9ff4a84d1f3d6719f2d60f0e14c90ab5567">aacb9ff4</td>
                 <td>fix: 修复会员权益同步</td>
               </tr>
@@ -935,22 +939,24 @@
       </div>
       <div class="modal-body" id="commitDetailBody" style="display:none;">
         <div class="publish-line">
-          <span>发布分支:</span>
-          <span class="link">feature-20260515-saas</span>
+          <span>构建引用:</span>
+          <span class="link">v1.2.0</span>
         </div>
-        <div class="section-title">运行分支</div>
+        <div class="section-title">引用明细</div>
         <div class="branch-table">
           <table>
             <thead>
               <tr>
-                <th>分支</th>
+                <th>引用名称</th>
+                <th>类型</th>
                 <th>commitId</th>
                 <th>提交说明</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><span class="link">feature-20260515-saas</span></td>
+                <td><span class="link">v1.2.0</span></td>
+                <td>标签</td>
                 <td class="commit-cell" title="6fbf207a84d1f3d6719f2d60f0e14c90ab3344">6fbf207a</td>
                 <td>fix: 修复路径引用</td>
               </tr>
@@ -982,7 +988,7 @@
 
     document.getElementById("openBranch").addEventListener("click", event => {
       event.stopPropagation();
-      document.getElementById("modalTitle").textContent = "分支信息";
+      document.getElementById("modalTitle").textContent = "版本信息";
       document.getElementById("branchDetailBody").style.display = "block";
       document.getElementById("commitDetailBody").style.display = "none";
       document.getElementById("branchModal").classList.add("show");
@@ -990,7 +996,7 @@
 
     document.getElementById("openCommit").addEventListener("click", event => {
       event.stopPropagation();
-      document.getElementById("modalTitle").textContent = "分支信息";
+      document.getElementById("modalTitle").textContent = "版本信息";
       document.getElementById("branchDetailBody").style.display = "none";
       document.getElementById("commitDetailBody").style.display = "block";
       document.getElementById("branchModal").classList.add("show");
