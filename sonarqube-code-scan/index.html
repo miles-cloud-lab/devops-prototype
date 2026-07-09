@@ -208,11 +208,15 @@
       border: 1px solid #d9d9d9;
       height: 32px;
       padding: 4px 10px;
+      font-size: 14px;
+      line-height: 22px;
       outline: none;
       background: #fff;
       border-radius: 0;
     }
     .input:focus, .select:focus, .textarea:focus { border-color: #1890ff; }
+    .select:invalid { color: #bfbfbf; }
+    .select option { color: #111827; }
     .textarea { height: 56px; resize: vertical; }
     .searchbox {
       display: flex;
@@ -434,6 +438,11 @@
       line-height: 22px;
       margin-top: 6px;
     }
+    .quick-create-line {
+      margin-top: 8px;
+      color: #6b7280;
+      line-height: 22px;
+    }
     .filter-mark {
       float: right;
       color: #bfbfbf;
@@ -591,13 +600,19 @@
     .multi-select {
       border: 1px solid #d9d9d9;
       min-height: 32px;
-      padding: 4px 8px;
+      padding: 4px 10px;
       display: flex;
       align-items: center;
       flex-wrap: wrap;
       gap: 4px;
       background: #fff;
       position: relative;
+      font-size: 14px;
+      line-height: 22px;
+    }
+    .modal .multi-select {
+      height: 32px;
+      overflow: hidden;
     }
     .multi-select .placeholder { color: #bfbfbf; }
     .multi-select.select-like:after {
@@ -627,7 +642,7 @@
     }
     .choice:hover { background: #f5faff; }
     .modal .form-row {
-      align-items: center;
+      align-items: flex-start;
     }
     .modal .form-row label {
       width: 112px;
@@ -635,6 +650,16 @@
     }
     .modal .form-control {
       max-width: none;
+      position: relative;
+    }
+    .modal .choice-list {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 32px;
+      z-index: 36;
+      margin-top: 4px;
+      background: #fff;
     }
     .drawer-mask {
       justify-content: flex-end;
@@ -785,7 +810,8 @@
       margin-bottom: 8px;
       white-space: nowrap;
     }
-    .task-body .form-row .input {
+    .task-body .form-row .input,
+    .task-body .form-row .select {
       width: 100%;
     }
     .task-body .tip {
@@ -1139,6 +1165,13 @@
             <div class="task-body">
               <div class="tip">代码扫描以主分支的代码为基线，扫描结果中只包含相对于主分支新增或修改的代码中发现的问题</div>
               <div class="form-row"><label class="required">任务名称</label><input class="input" value="SonarQube 代码扫描"></div>
+              <div class="form-row">
+                <label class="required">代码扫描配置</label>
+                <select id="pipelineScanConfigSelect" class="select">
+                  <option value="test05-wmh">test05-wmh / pipeline-demo-2</option>
+                </select>
+                <div class="quick-create-line">未找到可用配置？<a class="link" onclick="openCreateModal('pipeline')">快速创建</a></div>
+              </div>
               <div class="form-row"><label>语言类型</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>Java</span><span class="radio"><span class="radio-dot"></span>Scala</span><span class="radio"><span class="radio-dot"></span>Python</span><span class="radio"><span class="radio-dot"></span>Go</span></div></div>
               <div class="form-row"><label class="required">模块名称</label><input class="input" placeholder="请输入模块名称"></div>
               <div class="form-row"><label class="required">指定子模块</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>否</span><span class="radio"><span class="radio-dot"></span>是</span></div></div>
@@ -1146,7 +1179,7 @@
               <div class="form-row"><label class="required">二进制文件路径 <span class="inline-help">ⓘ</span></label><input class="input" value="target/classes"></div>
               <div class="form-row"><label>红线信息</label><a class="link">⊕ 添加红线</a></div>
               <div class="gate-row">
-                <label>质量门禁不通过时阻断流水线</label>
+                <label>质量门禁失败时阻断</label>
                 <div class="gate-control">
                   <span class="switch on" onclick="toggleSwitch(this)"></span>
                   <span class="gate-text">关闭后仅记录扫描结果并发送通知，不阻断流水线。</span>
@@ -1213,7 +1246,31 @@
     <div class="modal compact">
       <div class="modal-header"><span>新建扫描配置</span><span class="close" onclick="closeCreateModal()">×</span></div>
       <div class="modal-body">
-        <div class="form-row"><label class="required">选择仓库:</label><div class="form-control"><select id="repoSelect" class="select" style="width:100%"><option value="">请选择</option><option value="pipeline-demo-2">haonanzhao219734/pipeline-demo-2</option><option value="order-service">social/order-service</option></select></div></div>
+        <div class="form-row">
+          <label class="required">选择仓库:</label>
+          <div class="form-control">
+            <div id="repoSelect" class="multi-select select-like" onclick="toggleCreateRepoDropdown()">
+              <span class="placeholder">请选择</span>
+            </div>
+            <div id="createRepoChoiceList" class="choice-list hidden">
+              <div class="choice" onclick="selectCreateRepoChoice('pipeline-demo-2', 'haonanzhao219734/pipeline-demo-2', event)"><span>haonanzhao219734/pipeline-demo-2</span></div>
+              <div class="choice" onclick="selectCreateRepoChoice('order-service', 'social/order-service', event)"><span>social/order-service</span></div>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label class="required">选择应用:</label>
+          <div class="form-control">
+            <div id="createAppSelect" class="multi-select select-like" onclick="toggleCreateAppDropdown()">
+              <span class="placeholder">请选择</span>
+            </div>
+            <div id="createAppChoiceList" class="choice-list hidden">
+              <div class="choice" onclick="toggleCreateAppChoice('test05-wmh', event)"><span>test05-wmh</span></div>
+              <div class="choice" onclick="toggleCreateAppChoice('pipeline-demo', event)"><span>pipeline-demo</span></div>
+              <div class="choice" onclick="toggleCreateAppChoice('social-feed', event)"><span>social-feed</span></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-footer"><button class="btn" onclick="closeCreateModal()">取 消</button><button class="btn primary" onclick="createConfig()">确 定</button></div>
     </div>
@@ -1226,8 +1283,8 @@
         <div class="form-row">
           <label class="required">选择分支:</label>
           <div class="form-control">
-            <select id="scanBranchSelect" class="select" style="width:100%">
-              <option value="">请选择</option>
+            <select id="scanBranchSelect" class="select" style="width:100%" required>
+              <option value="" disabled selected hidden>请选择</option>
               <option value="master">master</option>
               <option value="develop">develop</option>
               <option value="release/2026-07">release/2026-07</option>
@@ -1364,7 +1421,17 @@
       document.querySelectorAll(".header-tab").forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".header-tab")[tab === "detail" ? 1 : 4].classList.add("active");
     }
-    function openCreateModal() { document.getElementById("createModal").classList.add("show"); }
+    function openCreateModal(source) {
+      window.__createConfigSource = source || "list";
+      window.__createSelectedRepo = source === "pipeline" ? "pipeline-demo-2" : "";
+      window.__createSelectedRepoLabel = source === "pipeline" ? "haonanzhao219734/pipeline-demo-2" : "";
+      window.__createSelectedApps = source === "pipeline" ? ["test05-wmh"] : [];
+      renderCreateRepoSelect();
+      renderCreateAppSelect();
+      document.getElementById("createRepoChoiceList").classList.add("hidden");
+      document.getElementById("createAppChoiceList").classList.add("hidden");
+      document.getElementById("createModal").classList.add("show");
+    }
     function closeCreateModal() { document.getElementById("createModal").classList.remove("show"); }
     function openStartScanModal(repoName) {
       window.__scanRepoName = repoName;
@@ -1382,10 +1449,58 @@
       if (document.getElementById("configForm").classList.contains("readonly")) return;
       document.getElementById("configAppChoiceList").classList.toggle("hidden");
     }
+    function toggleCreateRepoDropdown() {
+      document.getElementById("createRepoChoiceList").classList.toggle("hidden");
+      document.getElementById("createAppChoiceList").classList.add("hidden");
+    }
+    function selectCreateRepoChoice(repo, label, event) {
+      event.stopPropagation();
+      window.__createSelectedRepo = repo;
+      window.__createSelectedRepoLabel = label;
+      renderCreateRepoSelect();
+      document.getElementById("createRepoChoiceList").classList.add("hidden");
+    }
+    function renderCreateRepoSelect() {
+      const select = document.getElementById("repoSelect");
+      select.innerHTML = window.__createSelectedRepoLabel
+        ? `<span>${window.__createSelectedRepoLabel}</span>`
+        : '<span class="placeholder">请选择</span>';
+    }
+    function toggleCreateAppDropdown() {
+      document.getElementById("createRepoChoiceList").classList.add("hidden");
+      document.getElementById("createAppChoiceList").classList.toggle("hidden");
+    }
+    function toggleCreateAppChoice(app, event) {
+      event.stopPropagation();
+      const apps = window.__createSelectedApps || [];
+      window.__createSelectedApps = apps.includes(app) ? apps.filter(item => item !== app) : apps.concat(app);
+      renderCreateAppSelect();
+    }
+    function renderCreateAppSelect() {
+      const select = document.getElementById("createAppSelect");
+      const apps = window.__createSelectedApps || [];
+      select.innerHTML = apps.length
+        ? apps.map(app => `<span class="tag blue">${app} ×</span>`).join("")
+        : '<span class="placeholder">请选择</span>';
+    }
     function createConfig() {
-      const repo = document.getElementById("repoSelect").value;
+      const repo = window.__createSelectedRepo;
       if (!repo) { toast("请选择仓库", true); return; }
+      if (!(window.__createSelectedApps || []).length) { toast("请选择应用", true); return; }
       closeCreateModal();
+      if (window.__createConfigSource === "pipeline") {
+        const select = document.getElementById("pipelineScanConfigSelect");
+        const optionText = "test05-wmh / pipeline-demo-2";
+        let option = Array.from(select.options).find(item => item.value === "pipeline-auto");
+        if (!option) {
+          option = new Option(optionText, "pipeline-auto", true, true);
+          select.add(option);
+        }
+        option.text = optionText;
+        select.value = "pipeline-auto";
+        toast("扫描配置已创建，并已选择到当前任务");
+        return;
+      }
       toast("扫描配置已创建；已复用/初始化 SonarQube 项目权限");
       setTimeout(() => openConfig(true), 500);
     }
