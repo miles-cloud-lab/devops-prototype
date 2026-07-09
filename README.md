@@ -29,6 +29,10 @@ Image build task drawer with task-level image tag configuration.
 
 AI-assisted code review for pipeline code review tasks.
 
+### `sonarqube-code-scan/`
+
+Flux SonarQube code scan configuration, pipeline scan task, scan records, permission rules, and scan notification prototype.
+
 ## Files
 
 Each module keeps its PRD note and `index.html` prototype.
