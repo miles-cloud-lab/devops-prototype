@@ -438,11 +438,6 @@
       line-height: 22px;
       margin-top: 6px;
     }
-    .quick-create-line {
-      margin-top: 8px;
-      color: #6b7280;
-      line-height: 22px;
-    }
     .filter-mark {
       float: right;
       color: #bfbfbf;
@@ -1139,7 +1134,7 @@
               <span class="header-tab" onclick="showPipelineTab('notify')">报警通知</span>
             </div>
           </div>
-          <div class="right-actions"><span class="tag orange">! 已修改配置，请保存</span><button class="btn">仅保存</button><button class="btn primary">保存并运行</button></div>
+          <div class="right-actions"><span class="tag orange">! 已修改配置，请保存</span><button class="btn" onclick="savePipelineTask()">仅保存</button><button class="btn primary" onclick="savePipelineTask(true)">保存并运行</button></div>
         </div>
         <div id="pipeline-detail" class="pipeline-shell">
           <div class="pipeline-canvas">
@@ -1165,13 +1160,6 @@
             <div class="task-body">
               <div class="tip">代码扫描以主分支的代码为基线，扫描结果中只包含相对于主分支新增或修改的代码中发现的问题</div>
               <div class="form-row"><label class="required">任务名称</label><input class="input" value="SonarQube 代码扫描"></div>
-              <div class="form-row">
-                <label class="required">代码扫描配置</label>
-                <select id="pipelineScanConfigSelect" class="select">
-                  <option value="test05-wmh">test05-wmh / pipeline-demo-2</option>
-                </select>
-                <div class="quick-create-line">未找到可用配置？<a class="link" onclick="openCreateModal('pipeline')">快速创建</a></div>
-              </div>
               <div class="form-row"><label>语言类型</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>Java</span><span class="radio"><span class="radio-dot"></span>Scala</span><span class="radio"><span class="radio-dot"></span>Python</span><span class="radio"><span class="radio-dot"></span>Go</span></div></div>
               <div class="form-row"><label class="required">模块名称</label><input class="input" placeholder="请输入模块名称"></div>
               <div class="form-row"><label class="required">指定子模块</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>否</span><span class="radio"><span class="radio-dot"></span>是</span></div></div>
@@ -1421,11 +1409,10 @@
       document.querySelectorAll(".header-tab").forEach(t => t.classList.remove("active"));
       document.querySelectorAll(".header-tab")[tab === "detail" ? 1 : 4].classList.add("active");
     }
-    function openCreateModal(source) {
-      window.__createConfigSource = source || "list";
-      window.__createSelectedRepo = source === "pipeline" ? "pipeline-demo-2" : "";
-      window.__createSelectedRepoLabel = source === "pipeline" ? "haonanzhao219734/pipeline-demo-2" : "";
-      window.__createSelectedApps = source === "pipeline" ? ["test05-wmh"] : [];
+    function openCreateModal() {
+      window.__createSelectedRepo = "";
+      window.__createSelectedRepoLabel = "";
+      window.__createSelectedApps = [];
       renderCreateRepoSelect();
       renderCreateAppSelect();
       document.getElementById("createRepoChoiceList").classList.add("hidden");
@@ -1488,21 +1475,11 @@
       if (!repo) { toast("请选择仓库", true); return; }
       if (!(window.__createSelectedApps || []).length) { toast("请选择应用", true); return; }
       closeCreateModal();
-      if (window.__createConfigSource === "pipeline") {
-        const select = document.getElementById("pipelineScanConfigSelect");
-        const optionText = "test05-wmh / pipeline-demo-2";
-        let option = Array.from(select.options).find(item => item.value === "pipeline-auto");
-        if (!option) {
-          option = new Option(optionText, "pipeline-auto", true, true);
-          select.add(option);
-        }
-        option.text = optionText;
-        select.value = "pipeline-auto";
-        toast("扫描配置已创建，并已选择到当前任务");
-        return;
-      }
       toast("扫描配置已创建；已复用/初始化 SonarQube 项目权限");
       setTimeout(() => openConfig(true), 500);
+    }
+    function savePipelineTask(run) {
+      toast(run ? "已保存任务；系统将自动创建或关联基础扫描配置并运行" : "已保存任务；系统将自动创建或关联基础扫描配置");
     }
     function openTemplateModal() { document.getElementById("templateModal").classList.add("show"); }
     function closeTemplateModal() { document.getElementById("templateModal").classList.remove("show"); }
