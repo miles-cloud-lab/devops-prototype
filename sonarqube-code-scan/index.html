@@ -1095,12 +1095,6 @@
             </div>
           </div>
 
-          <div class="section-title">检测门禁</div>
-          <div class="form-row">
-            <label>门禁阈值:</label>
-            <div class="form-control"><span class="threshold-line"><a class="link">⊕ 添加红线</a></span></div>
-          </div>
-
           <div class="section-title">扫描结果</div>
           <div class="form-row">
             <label>通知模板:</label>
@@ -1165,7 +1159,6 @@
               <div class="form-row"><label class="required">指定子模块</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>否</span><span class="radio"><span class="radio-dot"></span>是</span></div></div>
               <div class="form-row"><label class="required">源代码路径 <span class="inline-help">ⓘ</span></label><input class="input" value="src"></div>
               <div class="form-row"><label class="required">二进制文件路径 <span class="inline-help">ⓘ</span></label><input class="input" value="target/classes"></div>
-              <div class="form-row"><label>红线信息</label><a class="link">⊕ 添加红线</a></div>
               <div class="gate-row">
                 <label>质量门禁失败时阻断</label>
                 <div class="gate-control">
@@ -1479,7 +1472,7 @@
       setTimeout(() => openConfig(true), 500);
     }
     function savePipelineTask(run) {
-      toast(run ? "已保存任务；系统将自动创建或关联基础扫描配置并运行" : "已保存任务；系统将自动创建或关联基础扫描配置");
+      toast(run ? "已保存任务；系统将自动创建或复用 SonarQube 项目并运行" : "已保存任务；系统将自动创建或复用 SonarQube 项目");
     }
     function openTemplateModal() { document.getElementById("templateModal").classList.add("show"); }
     function closeTemplateModal() { document.getElementById("templateModal").classList.remove("show"); }
