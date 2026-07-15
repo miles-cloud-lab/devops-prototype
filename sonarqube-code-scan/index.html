@@ -500,6 +500,7 @@
       color: #874d00;
       padding: 8px 12px;
       margin-top: 8px;
+      margin-bottom: 24px;
       line-height: 1.5;
     }
     .empty {
@@ -568,7 +569,7 @@
       line-height: 32px;
     }
     .modal.compact .modal-footer {
-      padding: 8px 24px 20px;
+      padding: 10px 24px 20px;
     }
     .modal-header {
       height: 52px;
@@ -884,6 +885,44 @@
       border-top: 1px solid #f0f0f0;
       margin: 20px 0;
     }
+    .mail-preview {
+      width: 620px;
+      max-width: 100%;
+      margin-top: 12px;
+      border: 1px solid #d9d9d9;
+      background: #fff;
+      font-size: 13px;
+      color: #111827;
+    }
+    .mail-preview-header {
+      padding: 16px 18px;
+      border-bottom: 2px solid #1890ff;
+      font-size: 20px;
+      font-weight: 600;
+    }
+    .mail-preview-body {
+      padding: 18px;
+      line-height: 1.9;
+    }
+    .mail-preview-body p {
+      margin: 0 0 6px;
+    }
+    .mail-preview-body .fail {
+      color: #f5222d;
+      font-weight: 600;
+    }
+    .mail-preview-divider {
+      margin: 18px 0 10px;
+      color: #9ca3af;
+    }
+    .mail-preview-footer {
+      padding: 12px 18px;
+      border-top: 1px solid #d9d9d9;
+      background: #f5f5f5;
+      text-align: center;
+      line-height: 1.8;
+      font-size: 12px;
+    }
     .toast {
       position: fixed;
       top: 66px;
@@ -949,7 +988,7 @@
         </div>
         <div class="page-body">
           <div class="toolbar">
-            <button class="btn primary" onclick="openCreateModal()">扫描配置</button>
+            <button class="btn primary" onclick="openCreateModal()">创建 SonarQube 项目</button>
             <div class="searchbox">
               <input id="repoSearch" class="input" placeholder="搜索仓库名称" oninput="filterRepo()">
               <button class="btn" onclick="filterRepo()">⌕</button>
@@ -958,12 +997,12 @@
           <table>
             <colgroup>
               <col style="width:19%">
-              <col style="width:25%">
+              <col style="width:21%">
               <col style="width:17%">
               <col style="width:8%">
               <col style="width:13%">
               <col style="width:8%">
-              <col style="width:10%">
+              <col style="width:14%">
             </colgroup>
             <thead>
               <tr>
@@ -1152,7 +1191,6 @@
           <div class="task-panel">
             <div class="task-header"><span class="task-title-wrap"><span class="task-close">×</span><b>编辑任务</b></span><button class="btn danger">删除</button></div>
             <div class="task-body">
-              <div class="tip">代码扫描以主分支的代码为基线，扫描结果中只包含相对于主分支新增或修改的代码中发现的问题</div>
               <div class="form-row"><label class="required">任务名称</label><input class="input" value="SonarQube 代码扫描"></div>
               <div class="form-row"><label>语言类型</label><div class="radio-line"><span class="radio checked"><span class="radio-dot"></span>Java</span><span class="radio"><span class="radio-dot"></span>Scala</span><span class="radio"><span class="radio-dot"></span>Python</span><span class="radio"><span class="radio-dot"></span>Go</span></div></div>
               <div class="form-row"><label class="required">模块名称</label><input class="input" placeholder="请输入模块名称"></div>
@@ -1214,6 +1252,27 @@
                   <div class="empty"><span class="empty-icon"></span><span>暂无数据</span></div>
                   <div class="subtle-line"></div>
                   <div>报警通知模板配置了报警接收人和对应的消息接收渠道，点击 <a class="link" onclick="openTemplateModal()">了解详情</a></div>
+                  <div class="mail-preview">
+                    <div class="mail-preview-header">Panther平台</div>
+                    <div class="mail-preview-body">
+                      <p>尊敬的用户，您好：</p>
+                      <p style="text-indent: 2em;">流水线 pipeline-demo-test-code-scan 代码扫描结果<span class="fail">未通过</span></p>
+                      <p><strong>详情：</strong></p>
+                      <p>流水线：pipeline-demo-test-code-scan</p>
+                      <p>所属项目：test-demo-zhn</p>
+                      <p>描述信息：</p>
+                      <p>触发用户：赵浩南</p>
+                      <p>扫描代码项目：bigdata-system-research/bd-devops</p>
+                      <p>扫描代码分支：feature/feature_20250515_task_result_and_when</p>
+                      <p>扫描结果：总数 2，阻塞 0，严重 2，主要 0，次要 0，提示 0，覆盖率 0.0%</p>
+                      <p>查看详情：<a class="link">SonarQube 扫描详情</a></p>
+                      <div class="mail-preview-divider">------------------------------------------------------</div>
+                      <p>如需咨询，请通过 Panther 平台按问题类型联系对应支持人员；使用方式可查看<a class="link" href="https://panther.sohurdc.com/control/system-notification/detailmsg/485" target="_blank">帮助文档</a>。</p>
+                    </div>
+                    <div class="mail-preview-footer">
+                      本邮件由 Panther 平台自动产生和发送，请勿直接回复。
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1229,7 +1288,7 @@
 
   <div id="createModal" class="modal-mask">
     <div class="modal compact">
-      <div class="modal-header"><span>新建扫描配置</span><span class="close" onclick="closeCreateModal()">×</span></div>
+      <div class="modal-header"><span>创建 SonarQube 项目</span><span class="close" onclick="closeCreateModal()">×</span></div>
       <div class="modal-body">
         <div class="form-row">
           <label class="required">选择仓库:</label>
@@ -1265,6 +1324,7 @@
     <div class="modal compact">
       <div class="modal-header"><span>启动扫描</span><span class="close" onclick="closeStartScanModal()">×</span></div>
       <div class="modal-body">
+        <div class="warning">启动扫描前请先完善配置，确认主要语言、扫描路径等配置。</div>
         <div class="form-row">
           <label class="required">选择分支:</label>
           <div class="form-control">
@@ -1357,6 +1417,7 @@
           <td>${repo.createdAt}</td>
           <td><span class="tag orange">${repo.trigger}</span></td>
           <td><div class="op-list">
+            <a class="link" onclick="openSqProject('${repo.name}')">查看项目</a>
             <a class="link" onclick="openStartScanModal('${repo.name}')">启动扫描</a>
             <a class="link" onclick="showView('scanRecords')">扫描记录</a>
             <a class="link" onclick="openConfig(${repo.editable})">配置</a>
@@ -1472,8 +1533,7 @@
       if (!repo) { toast("请选择仓库", true); return; }
       if (!(window.__createSelectedApps || []).length) { toast("请选择应用", true); return; }
       closeCreateModal();
-      toast("扫描配置已创建；已复用/初始化 SonarQube 项目权限");
-      setTimeout(() => openConfig(true), 500);
+      toast("SonarQube 项目已创建或复用；权限已同步");
     }
     function savePipelineTask(run) {
       toast(run ? "已保存任务；系统将自动创建或复用 SonarQube 项目并运行" : "已保存任务；系统将自动创建或复用 SonarQube 项目");
@@ -1485,6 +1545,10 @@
     function openSqLink(branch) {
       toast(`将跳转 SonarQube 扫描记录：${branch}`);
       window.open(`https://sonarqube.sohu-inc.com/dashboard?id=pipeline-demo-2&branch=${encodeURIComponent(branch)}`, "_blank");
+    }
+    function openSqProject(repoName) {
+      toast(`将跳转 SonarQube 项目：${repoName}`);
+      window.open("https://sonarqube.sohu-inc.com/dashboard?id=pipeline-demo-2", "_blank");
     }
     function toggleSwitch(el) { el.classList.toggle("on"); }
     function openAppPicker() {}
